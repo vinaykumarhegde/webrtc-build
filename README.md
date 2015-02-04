@@ -87,7 +87,7 @@ vagrant vm you can do:
 ```bash
 $ vagrant ssh
 vagrant@vagrant-ubuntu-trusty-64$ cd /opt/webrtc
-vagrant@vagrant-ubuntu-trusty-64$ WEBRTC_OS=linux WEBRTC_ARCH=armhf WEBRTC_BUILD=debug ./scripts/build
+vagrant@vagrant-ubuntu-trusty-64$ WEBRTC_OS=linux WEBRTC_ARCH=armv7hf WEBRTC_BUILD=debug ./scripts/build
 ```
 
 ### linux
@@ -113,11 +113,7 @@ Some build artifacts need to be packaged (e.g. native libs):
 
 ### linux-dev deb
 
-```bash
-$ WEBRTC_BUILD=Debug ./pkg linux-x86_64
-...
-$ ls out/linux-x86_64/debug/
-```
+**TODO**
 
 ## publish
 
@@ -125,6 +121,4 @@ And to publish build and package artifacts:
 
 ### linux-dev deb
 
-```bash
-$ WEBRTC_BUILD=Debug ./pub linux-x86_64
-```
+**TODO**
