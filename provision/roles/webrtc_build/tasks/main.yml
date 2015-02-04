@@ -1,0 +1,14 @@
+---
+- name: synchronize webrtc build scripts
+  synchronize:
+    src: /home/ai/code/bosch/webrtc-build/scripts
+    dest: /opt/webrtc/
+    rsync_path: "sudo rsync"
+  tags: [webrtc-build]
+
+- name: install python dependencies
+  pip: name={{ item }}
+  with_items:
+  - mako
+  sudo: yes
+  tags: [webrtc-build]

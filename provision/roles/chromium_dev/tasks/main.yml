@@ -1,0 +1,42 @@
+---
+- include: depot_tools.yml
+  tags: [chromium-dev, depot_tools]
+  
+- name: download chromium install build deps script
+  get_url:
+    url: https://src.chromium.org/svn/trunk/src/build/install-build-deps.sh
+    dest: /opt/chromium-install-build-deps.sh
+    mode: 0755
+  tags: [chromium-dev, deps]
+  sudo: yes
+
+- name: copy expect for chromium install build deps script
+  copy:
+    src: opt/chromium-install-build-deps.expect
+    dest: /opt/chromium-install-build-deps.expect
+    owner: root
+    group: root
+    mode: 0755
+  tags: [chromium-dev, deps]
+  sudo: yes
+
+- name: accept ttf-mscorefonts-installer eula
+  debconf:
+    name: ttf-mscorefonts-installer
+    question: msttcorefonts/accepted-mscorefonts-eula
+    value: "true"
+    vtype: select
+  tags: [chromium-dev, deps]
+  sudo: yes
+
+- name: install chromium build deps
+  apt: name={{ item }} state=present
+  with_items:
+  - g++-4.8-multilib-arm-linux-gnueabihf
+  tags: [chromium-dev]
+  sudo: yes
+
+- name: install chromium build deps
+  command: /opt/chromium-install-build-deps.expect
+  tags: [chromium-dev, deps]
+  sudo: yes

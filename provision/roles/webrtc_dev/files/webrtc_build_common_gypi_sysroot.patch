@@ -1,0 +1,25 @@
+diff --git a/build/common.gypi b/build/common.gypi
+index 948dcec..eaaffd3 100644
+--- a/build/common.gypi
++++ b/build/common.gypi
+@@ -899,16 +899,16 @@
+           'use_allocator%': 'none',
+           # sysroot needs to be an absolute path otherwise it generates
+           # incorrect results when passed to pkg-config
+-          'sysroot%': '<!(cd <(DEPTH) && pwd -P)/chrome/installer/linux/debian_wheezy_arm-sysroot',
++          'sysroot%': '<!(cd <(DEPTH) && pwd -P)/chromium/src/chrome/installer/linux/debian_wheezy_arm-sysroot',
+         }], # OS=="linux" and target_arch=="arm" and chromeos==0
+ 
+         ['OS=="linux" and branding=="Chrome" and buildtype=="Official" and chromeos==0', {
+           'conditions': [
+             ['target_arch=="x64"', {
+-              'sysroot%': '<!(cd <(DEPTH) && pwd -P)/chrome/installer/linux/debian_wheezy_amd64-sysroot',
++              'sysroot%': '<!(cd <(DEPTH) && pwd -P)/chromium/src/chrome/installer/linux/debian_wheezy_amd64-sysroot',
+             }],
+             ['target_arch=="ia32"', {
+-              'sysroot%': '<!(cd <(DEPTH) && pwd -P)/chrome/installer/linux/debian_wheezy_i386-sysroot',
++              'sysroot%': '<!(cd <(DEPTH) && pwd -P)/chromium/src/chrome/installer/linux/debian_wheezy_i386-sysroot',
+             }],
+         ],
+         }], # OS=="linux" and branding=="Chrome" and buildtype=="Official" and chromeos==0
+

@@ -1,0 +1,305 @@
+#!/usr/bin/env python
+"""
+Hacks for:
+
+1. merging .a files into a shared library
+2. creating a pkg-config file
+
+which are useful for building `libjingle` into other targets. e.g.:
+
+```bash
+$ ./scripts/libjingle static-lib src/out/linux_x86_64/Debug/
+$ stat src/out/linux_x86_64/Debug/libjingle.a
+...
+$ ./scripts/libjingle pkg-config src/out/linux_x86_64/Debug/ 1.0.0 > src/out/linux_x86_64/Debug/libjingle.pc
+```
+
+now we can create a development package (e.g. debian) using those. For usage:
+
+```bash
+$ ./scripts/libjingle --help
+```
+
+"""
+import argparse
+import logging
+import os
+import re
+import subprocess
+import sys
+import tempfile
+
+import mako.template
+
+
+logger = logging.getLogger(__name__)
+
+
+class Ninja(dict):
+    
+    def __init__(self, io, strict=False):
+        super(Ninja, self).__init__({
+            'build': {},
+            'rule': {},
+            'var': {},
+        })
+        self._parse(io, strict=strict)
+        
+    @property
+    def build(self):
+        return self['build']
+
+    @property
+    def rule(self):
+        return self['rule']
+    
+    @property
+    def var(self):
+        return self['var']
+    
+    class Build(dict):
+        
+        @property
+        def inputs(self):
+            return self['inputs']
+    
+    class InvalidBlock(ValueError):
+        
+        def __init__(self, src, pos, header, body):
+            self.src = src
+            self.pos = pos
+            self.header = header
+            self.body = body
+            super(Ninja.InvalidBlock, self).__init__(str(self))
+        
+        def __str__(self):
+            return '{src} @ {pos} - \n{header}\n{body}'.format(
+                src=self.src,
+                pos=self.pos,
+                header=self.header,
+                body=self.body,
+            )
+    
+    class UnknownBlock(InvalidBlock):
+        
+        pass
+    
+    class MalformedBlock(InvalidBlock):
+        
+        pass
+    
+    def _parse(self, io, strict):
+        name = getattr(io, 'name', '<memory>')
+        loc, buffer = 0, []
+        for i, line in enumerate(io):
+            if re.match('^\s', line) is not None:
+                buffer.append(line)
+                continue
+            if buffer:
+                try:
+                    header, _, body = ''.join(buffer).replace('$\n', '').partition('\n')
+                    self._parse_block(
+                        src_name=name,
+                        src_loc=loc,
+                        header=header,
+                        body=body,
+                    )
+                except self.MalformedBlock, ex:
+                    if strict:
+                        raise
+                    logger.warning(str(ex), exc_info=ex)
+                except self.UnknownBlock, ex:
+                    if strict:
+                        raise
+                    logger.debug(str(ex), exc_info=ex)
+            loc, buffer = i, [line]
+        
+    def _parse_block(self, src_name, src_loc, header, body):
+        if re.match('build\s+', header) is not None:
+            parse = self._parse_build
+        elif re.match('\w+\s+=\s+', header) is not None:
+            parse = self._parse_variable
+        else:
+            raise self.UnknownBlock(src_name, src_loc, header, body)
+        return parse(src_name, src_loc, header, body)
+    
+    def _parse_build(self, src_name, src_loc, header, body):
+        m = re.match('build\s+(?P<output>.+?)\:\s*(?P<name>\w+)(?P<inputs>.+)?', header)
+        if m is None:
+            raise self.MalformedBlock(src_name, src_loc, header, body)
+        self.build[m.group('output')] = self.Build(
+            name=m.group('name'),
+            inputs=[
+                input.strip()
+                for input in (m.group('inputs') or '').strip().split()
+                if input.strip()
+            ],
+        )
+        return True
+    
+    def _parse_variable(self, src_name, src_loc, header, body):
+        m = re.match('(?P<name>\w+)\s*=\s*(?P<values>.+)?', header)
+        if m is None:
+            raise self.MalformedBlock(src_name, src_loc, header, body)
+        name = m.group('name')
+        values = [
+            value.strip()
+            for value in (m.group('values') or '').strip().split()
+            if value.strip()
+        ]
+        self.var[name] = values
+        return True
+
+
+class PkgConfig(object):
+    
+    TEMPLATE = r"""\
+prefix=${config.prefix}
+libdir=<%text>${prefix}</%text>/lib
+includedir=<%text>${prefix}</%text>/include/jingle
+
+Name: ${config.name}
+Description: Google's WebRTC implementation.
+URL: https://code.google.com/p/webrtc/
+Version: ${config.version}
+Requires: 
+Requires.private:
+Conflicts:
+Cflags: \
+-I<%text>${includedir}\</%text>
+% for define in config.defines:
+-D${define} <%text>\</%text>
+% endfor
+
+Libs: \
+-L<%text>${libdir}\</%text>
+% for lib in config.libs:
+${lib} <%text>\</%text>
+% endfor
+"""
+    
+    def __init__(self, prefix, version, ninja):
+        self.name = 'libjingle'
+        self.version = version
+        self.prefix = prefix
+        self.defines = ninja.var['defines']
+        self.libs = ninja.var['libs']
+        
+    def __str__(self):
+        return unicode(self).encode('utf-8')
+    
+    def __unicode__(self):
+        return mako.template.Template(self.TEMPLATE).render(config=self)
+
+
+class Archive(object):
+    
+    BUILD_RULE = 'obj/talk/libjingle_peerconnection_so.actions_depends.stamp'
+    
+    def __init__(self, work_dir, name, ninja):
+        self.work_dir = work_dir
+        self.name = name
+        self.inputs = ninja.build[self.BUILD_RULE].inputs
+    
+    @property
+    def script(self):
+        return ArchiveScript(self)
+
+
+class ArchiveScript(object):
+    
+    TEMPLATE = """\
+CREATE ${archive.name}.a
+
+% for input in archive.inputs:
+    % if input.endswith('.a'):
+ADDLIB ${input}
+    % endif
+% endfor
+
+SAVE
+END
+"""
+    def __init__(self, archive, ar=None):
+        self.ar = ar or 'ar'
+        self.archive = archive
+    
+    def __str__(self):
+        return unicode(self).encode('utf-8')
+    
+    def __unicode__(self):
+        return mako.template.Template(self.TEMPLATE).render(
+            archive=self.archive,
+        )
+    
+    def __call__(self):
+        logger.debug('rendering script')
+        renderer = str(self)
+        
+        tmp_fd, tmp_path = tempfile.mkstemp(prefix='libjingle_', suffix='.ar')
+        logger.info('writing script to "%s"', tmp_path)
+        with open(tmp_path, 'w') as tmp_fo:
+            os.close(tmp_fd)
+            tmp_fo.write(renderer)
+            
+        command = [self.ar, '-M']
+        logger.info('call(%s) w/ cwd "%s"', ' '.join(command), self.archive.work_dir)
+        with open(tmp_path, 'r') as tmp_fo:
+            subprocess.check_call(
+                command, stdin=tmp_fo, cwd=self.archive.work_dir,
+            )
+        logger.info('created archive %s @ "%s"', 'libjingle.a', self.archive.work_dir)
+
+        logger.debug('removing archive script "{0}"'.format(tmp_path))
+        os.remove(tmp_path)
+
+
+def create_static_lib(args):
+    work_dir = os.path.abspath(args.work[0])
+    with open(os.path.join(work_dir, 'obj', 'talk', 'libjingle_peerconnection_so.ninja'), 'r') as fo:
+        ninja = Ninja(fo, args.strict)
+    archive = Archive(work_dir, 'libjingle', ninja)
+    archive.script()
+
+
+def create_pkg_config(args):
+    work_dir = os.path.abspath(args.work[0])
+    with open(os.path.join(work_dir, 'obj', 'talk', 'libjingle_peerconnection_so.ninja'), 'r') as fo:
+        ninja = Ninja(fo)
+    pkg_config = PkgConfig(version=args.version[0], prefix='/usr/local', ninja=ninja)
+    print pkg_config
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    
+    parser_common = argparse.ArgumentParser(add_help=False)
+    parser_common.add_argument('-l', '--log-level', default='d', choices=['d', 'i', 'w', 'e'])
+    parser_common.add_argument('-s', '--strict', default=False, action='store_true')
+    
+    subparsers = parser.add_subparsers()
+
+    parser_sub = subparsers.add_parser('static-lib', parents=[parser_common], help='create static library.')
+    parser_sub.add_argument('work', nargs=1, help='build work directory.')
+    parser_sub.set_defaults(command=create_static_lib)
+    
+    parser_sub = subparsers.add_parser('pkg-config', parents=[parser_common], help='create pkgconfig for static library.')
+    parser_sub.add_argument('work', nargs=1, help='build work directory.')
+    parser_sub.add_argument('version', nargs=1, help='library version.')
+    parser_sub.set_defaults(command=create_pkg_config)
+    
+    args = parser.parse_args()
+    logging.basicConfig(
+        level={
+            'd': logging.DEBUG,
+            'i': logging.INFO,
+            'w': logging.WARN,
+            'e': logging.ERROR,
+        }[args.log_level],
+        stream=sys.stderr,
+    )
+    args.command(args)
+
+
+if __name__  == '__main__':
+    main()

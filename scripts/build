@@ -1,0 +1,255 @@
+#!/bin/bash
+#
+# Utility WebRTC build scripts, which based on these:
+#
+#   WEBRTC_OS=${WEBRTC_OS:-"linux"}
+#   WEBRTC_ARCH=${WEBRTC_ARCH:-"x86_64"}
+#   WEBRTC_BUILD=${WEBRTC_BUILD:-"debug"}
+#   WEBRTC_SRC=${WEBRTC_SRC:-"src"}
+#   WEBRTC_ROOT=${WEBRTC_ROOT:-`pwd`}
+#   WEBRTC_OUT=${WEBRTC_OUT:-"out/${WEBRTC_OS}_${WEBRTC_ARCH}"}
+#
+# sets GYP build environment variables:
+#
+#   GYP_DEFINES=
+#   GYP_GENERATORS=
+#   GYP_GENERATOR_FLAGS=
+#   GYP_CROSSCOMPILE=
+#
+# and then does ~:
+#
+#   $ cd $WEBRTC_ROOT
+#   $ gclient runhooks
+#   $ cd $WEBRTC_SRC
+#   $ ninja -C $WEBRTC_OUT $WEBRTC_TARGET
+#
+# Its based on: https://github.com/pristineio/webrtc-build-scripts.
+#
+
+WEBRTC_OS=${WEBRTC_OS:-"linux"}
+WEBRTC_ARCH=${WEBRTC_ARCH:-"x86_64"}
+WEBRTC_BUILD=${WEBRTC_BUILD:-"debug"}
+WEBRTC_SRC=${WEBRTC_SRC:-"src"}
+WEBRTC_ROOT=${WEBRTC_ROOT:-`pwd`}
+WEBRTC_OUT=${WEBRTC_OUT:-"out/${WEBRTC_OS}_${WEBRTC_ARCH}"}
+WEBRTC_TARGET=
+
+USAGE="\
+[WEBRTC_{option}={value}]* $0 [-d|--dry] [-h|--help]
+
+where WEBRTC_{option} is one of:
+
+WEBRTC_OS= Operating system, defaults to linux.
+WEBRTC_ARCH= Machine architecture, defaults to x86_64.
+WEBRTC_BUILD= Built type, defaults to debug.
+WEBRTC_ROOT= Directory containing WebRTC source, defaults to '`pwd`'.
+WEBRTC_SRC= Name of WebRTC source directory in \${WEBRTC_ROOT}, defaults to src. 
+WEBRTC_OUT= Output directory in \$WEBRTC_ROOT/\$WEBRTC_SRC/out, \${WEBRTC_OS}_\${WEBRTC_ARCH}. 
+
+e.g.
+
+\$ WEBRTC_OS=linux WEBRTC_ARCH=armv7hf WEBRTC_BUILD=debug $0
+"
+
+SCRIPTS=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )  # http://stackoverflow.com/a/246128
+
+DRY=0
+
+GYP_DEFINES=
+GYP_GENERATORS=
+GYP_GENERATOR_FLAGS=
+GYP_CROSSCOMPILE=
+
+# environment
+
+function buildenv() {
+    local targets=(
+        common
+        ${WEBRTC_OS}
+        ${WEBRTC_ARCH}
+        ${WEBRTC_BUILD}
+        ${WEBRTC_OS}_${WEBRTC_ARCH}
+        ${WEBRTC_OS}_${WEBRTC_BUILD}
+        ${WEBRTC_OS}_${WEBRTC_ARCH}_${WEBRTC_BUILD}
+    )
+    for target in "${targets[@]}"; do
+        target="buildenv_${target,,}"
+        declare -f ${target} > /dev/null;
+        local exists=$?
+        if [ $exists -ne 0 ]; then
+            continue
+        fi
+        eval ${target}
+    done
+    GYP_DEFINES=`echo $GYP_DEFINES | sed -e 's/^ *//' -e 's/ *$//'`
+    GYP_GENERATORS=`echo $GYP_GENERATORS | sed -e 's/^ *//' -e 's/ *$//'`
+    GYP_GENERATOR_FLAGS=`echo $GYP_GENERATOR_FLAGS | sed -e 's/^ *//' -e 's/ *$//'`
+    GYP_CROSSCOMPILE=`echo $GYP_CROSSCOMPILE | sed -e 's/^ *//' -e 's/ *$//'`
+}
+
+function buildenv_common() {
+    GYP_DEFINES=${GYP_DEFINES}" \
+host_os=linux \
+build_with_libjingle=1 \
+build_with_chromium=0 \
+clang=1 \
+"
+    GYP_GENERATOR_FLAGS=${GYP_GENERATOR_FLAGS}" \
+output_dir=${WEBRTC_OUT} \
+"
+    GYP_GENERATORS="ninja"
+}
+
+function buildenv_armv7hf() {
+    GYP_DEFINES=${GYP_DEFINES}" \
+target_arch=arm \
+arm_version=7 \
+arm_float_abi=hard \
+arm_neon=1 \
+"
+    GYP_CROSSCOMPILE=1
+}
+
+function buildenv_x86_64() {
+    GYP_DEFINES=${GYP_DEFINES}" \
+target_arch=x64 \
+"
+}
+
+function buildenv_debug() {
+    GYP_DEFINES=${GYP_DEFINES}" \
+enable_tracing=1 \
+"
+    WEBRTC_BUILD=Debug
+}
+
+function buildenv_release() {
+    GYP_DEFINES=${GYP_DEFINES}" \
+enable_tracing=0 \
+"
+    WEBRTC_BUILD=Release
+}
+
+function buildenv_linux() {
+    GYP_DEFINES=${GYP_DEFINES}" \
+OS=linux \
+"
+    WEBRTC_TARGET="libjingle_peerconnection_so"
+}
+
+function buildenv_linux_debug() {
+    GYP_DEFINES=${GYP_DEFINES}" \
+disable_iterator_debugging=1 \
+disable_glibcxx_debug=1 \
+"
+}
+
+# build
+
+function build() {
+    local targets=(
+        common
+        ${WEBRTC_OS}
+        ${WEBRTC_ARCH}
+        ${WEBRTC_BUILD}
+        ${WEBRTC_OS}_${WEBRTC_ARCH}
+        ${WEBRTC_OS}_${WEBRTC_BUILD}
+        ${WEBRTC_OS}_${WEBRTC_ARCH}_${WEBRTC_BUILD}
+    )
+    for target in "${targets[@]}"; do
+        target="build_${target,,}"
+        declare -f ${target} > /dev/null;
+        local exists=$?
+        if [ $exists -ne 0 ]; then
+            continue
+        fi
+        eval ${target}
+        local rc=$?
+        if [ ! $rc -eq 0 ]; then
+            return $rc; 
+        fi
+    done
+}
+
+function build_common() {
+    local working_dir=`pwd`
+
+    echo "running gclient hooks in '${WEBRTC_ROOT}/${WEBRTC_SRC}'"
+    cd "${WEBRTC_ROOT}/${WEBRTC_SRC}"
+    gclient runhooks
+    
+    if [ ! -d "${WEBRTC_OUT}" ]; then
+        echo "creating out dir '${WEBRTC_OUT}'"
+        mkdir -p "${WEBRTC_OUT}"
+    fi
+
+    echo "building '${WEBRTC_TARGET}' in '${WEBRTC_ROOT}/${WEBRTC_SRC}' with:"
+    echo "  GYP_DEFINES=${GYP_DEFINES}"
+    echo "  GYP_GENERATORS=${GYP_GENERATORS}"
+    echo "  GYP_GENERATOR_FLAGS=${GYP_GENERATOR_FLAGS}"
+    echo "  GYP_CROSSCOMPILE=${GYP_CROSSCOMPILE}"
+    ninja -C ${WEBRTC_OUT}/${WEBRTC_BUILD} $WEBRTC_TARGET
+    local rc=$?
+    cd $working_dir
+    if [ $rc -eq 0 ]; then
+        echo "'${WEBRTC_TARGET}' build in '${WEBRTC_ROOT}/${WEBRTC_SRC}' succeeded"
+    else
+        echo "'${WEBRTC_TARGET}' build in '${WEBRTC_ROOT}/${WEBRTC_SRC}' failed (rc=${rc})"
+        return $rc
+    fi
+}
+
+function build_linux() {
+    local build_dir=${WEBRTC_ROOT}/${WEBRTC_SRC}/${WEBRTC_OUT}/${WEBRTC_BUILD}
+    
+    echo "building static-lib in '${build_dir}/libjingle.a'"
+    ${SCRIPTS}/libjingle static-lib ${build_dir} -li -s
+    local rc=$?
+    if [ $rc -eq 0 ]; then
+        echo "'${build_dir}/libjingle.a' build succeeded"
+    else
+        echo "'${build_dir}/libjingle.a' build failed (rc=${rc})"
+        return $rc
+    fi
+}
+
+# main
+
+while [ $# -ge 1 ]; do
+    case "$1" in
+        -h|--help)
+            printf "$USAGE"
+            exit 0
+            ;;
+        -d|--dry)
+            DRY=1
+            ;;
+        *)
+            echo "invalid argument '${1}', see:"
+            printf "$USAGE"
+            exit 1
+            ;;
+    esac
+    shift
+done
+
+echo "environment ..."
+if ! buildenv; then
+    exit 2
+fi
+echo "GYP_DEFINES=${GYP_DEFINES}"
+echo "GYP_GENERATORS=${GYP_GENERATORS}"
+echo "GYP_GENERATOR_FLAGS=${GYP_GENERATOR_FLAGS}"
+echo "GYP_CROSSCOMPILE=${GYP_CROSSCOMPILE}"
+if [ ! $DRY -eq 0 ]; then
+    exit 0
+fi
+
+echo "build ..."
+export GYP_DEFINES=$GYP_DEFINES
+export GYP_GENERATORS=$GYP_GENERATORS
+export GYP_GENERATOR_FLAGS=$GYP_GENERATOR_FLAGS
+export GYP_CROSSCOMPILE=$GYP_CROSSCOMPILE
+if ! build; then
+    exit 3
+fi
