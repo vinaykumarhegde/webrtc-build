@@ -1,14 +1,22 @@
 ---
-- name: synchronize webrtc build scripts
-  synchronize:
-    src: /home/ai/code/bosch/webrtc-build/scripts
-    dest: /opt/webrtc/
-    rsync_path: "sudo rsync"
+- name: synchronize scripts
+  synchronize: src="{{ webrtc_build_src }}/scripts" dest=/opt/webrtc/ rsync_path="sudo rsync"
+  tags: [webrtc-build]
+
+- name: copy makefile
+  copy: src="{{ webrtc_build_src }}/Makefile" dest=/opt/webrtc/Makefile mode=0666
   tags: [webrtc-build]
 
 - name: install python dependencies
   pip: name={{ item }}
   with_items:
   - mako
-  sudo: yes
   tags: [webrtc-build]
+  sudo: yes
+
+- name: install ruby dependencies
+  gem: name=fpm state=present user_install=no
+  with_items:
+  - fpm
+  tags: [webrtc-build]
+  sudo: yes

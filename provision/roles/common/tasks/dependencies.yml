@@ -37,6 +37,9 @@
   - pkg-config
   - nethogs
   - python-pip
+  - rubygems1.9.1
+  - ruby1.9.1-dev
+  - python2.7-dev
   tags: [tools]
   sudo: yes
 

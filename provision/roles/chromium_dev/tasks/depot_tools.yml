@@ -1,13 +1,9 @@
 ---
-- name: create depot_tools directory
-  file: path=/opt/depot_tools state=directory owner=root group=root mode=0777
-  tags: [chromium-dev, depot-tools]
-  sudo: yes
-
 - name: clone depot_tools
   git:
     repo: https://chromium.googlesource.com/chromium/tools/depot_tools.git
     dest: /opt/depot_tools
+  sudo: yes
 
 - name: set depot_tools profile
   copy:

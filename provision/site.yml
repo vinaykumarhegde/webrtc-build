@@ -2,7 +2,7 @@
 - hosts: all
   tasks: []
   vars:
-    webrtc_build_scripts: ../scripts
+    webrtc_build_src: ../
   roles:
   - common
   - chromium_dev

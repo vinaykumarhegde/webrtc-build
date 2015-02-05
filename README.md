@@ -75,14 +75,14 @@ $ cd provision/
 $ ansible-playbook site.yml -i inventories/vagrant
 ```
 
-## build
+## scripts
 
-Scripts for building are in `scripts/` and based on:
+These are in `scripts/` and based on:
 
 * https://github.com/pristineio/webrtc-build-scripts
 
-They are dumped in `/opt/webrtc/` by `provision` so if e.g. you provisioned a
-vagrant vm you can do: 
+They are dumped in `/opt/webrtc/scipts/` by `ansible` when provisioning so if
+e.g. you provisioned a `vagrant` vm you can do: 
 
 ```bash
 $ vagrant ssh
@@ -90,35 +90,31 @@ vagrant@vagrant-ubuntu-trusty-64$ cd /opt/webrtc
 vagrant@vagrant-ubuntu-trusty-64$ WEBRTC_OS=linux WEBRTC_ARCH=armv7hf WEBRTC_BUILD=debug ./scripts/build
 ```
 
-### linux
+but you'll typically just use `make`.
+
+### make
+
+The orchestration for building, packaging and publishing using:
+
+* [depot_tools](http://www.chromium.org/developers/how-tos/depottools) and
+* `scripts/`
+
+is done using a :neckbeard: `make` file. Its copied to `/opt/webrtc/Makefile` by `ansible`
+when provisioning. So e.g. to do everything:
 
 ```bash
-$ WEBRTC_OS=linux WEBRTC_ARCH=x86_64 WEBRTC_BUILD=debug ./scripts/build
-...
-$ ls out/linux_x86_64/Debug/
+$ make clean
+$ make all
 ...
 ```
 
-### android
+or step manually for an explicit target, e.g. `linux_arm_debug`, do:
 
-**TODO**
-
-### osx
-
-**TODO**
-
-## package
-
-Some build artifacts need to be packaged (e.g. native libs):
-
-### linux-dev deb
-
-**TODO**
-
-## publish
-
-And to publish build and package artifacts:
-
-### linux-dev deb
-
-**TODO**
+```bash
+$ make build_linux_arm_debug
+...
+$ make pkg_linux_arm_debug
+...
+$ make pub_linux_arm_debug
+...
+```
