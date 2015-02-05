@@ -108,7 +108,7 @@ $ make all
 ...
 ```
 
-or step manually for an explicit target, e.g. `linux_arm_debug`, do:
+or to step manually for an explicit target, e.g. `linux_arm_debug`, do:
 
 ```bash
 $ make build_linux_arm_debug
