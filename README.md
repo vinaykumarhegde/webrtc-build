@@ -107,10 +107,10 @@ $ make all
 ...
 ```
 
-or for a specific target, e.g. `linux_arm_debug`, do:
+or for a specific target, e.g. `linux_armhf_release`, do:
 
 ```bash
-$ make linux_arm_debug
+$ make linux_armhf_release
 ...
 ```
 
