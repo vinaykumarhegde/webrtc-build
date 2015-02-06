@@ -34,7 +34,9 @@ LINUX_ARMHF_RELEASE_DEB=libjingle_$(DEB_VERSION)release-$(DEB_REVISION)_armhf.de
 
 all: \
 linux_x86_64_debug \
-linux_x86_64_release
+linux_x86_64_release \
+linux_armhf_debug \
+linux_armhf_release
 
 clean:
 	rm -rf $(SRC_OUT)/*
@@ -44,7 +46,9 @@ clean:
 all \
 clean \
 linux_x86_64_debug \
-linux_x86_64_release
+linux_x86_64_release \
+linux_armhf_debug \
+linux_armhf_release
 
 $(DST):
 	mkdir -p $@
