@@ -13,7 +13,7 @@
   tags: [webrtc-dev]
 
 - name: checkout
-  shell: source /etc/profile && git checkout master && git pull
+  shell: source /etc/profile && git checkout {{ webrtc_dev_branch }} && git pull
   args:
     chdir: /opt/webrtc/src
     executable: /bin/bash
@@ -40,7 +40,7 @@
   tags: [webrtc-dev]
 
 - name: syncing (can take HOURS!)
-  shell: source /etc/profile && gclient sync
+  shell: source /etc/profile && gclient sync{{ " --revision {0}".format(webrtc_dev_revision) if webrtc_dev_revision else "" }}
   args:
     chdir: /opt/webrtc
     executable: /bin/bash

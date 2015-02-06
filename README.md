@@ -4,7 +4,6 @@ Automation for:
 
 - building
 - packaging
-- publishing
 
 [Google's implementation](https://code.google.com/p/webrtc/) of WebRTC.
 
@@ -14,7 +13,6 @@ This is based on:
 
 * http://www.webrtc.org/native-code/development
 * https://github.com/pristineio/webrtc-build-scripts
-* http://unix.stackexchange.com/a/177985
 
 ## dependencies
 
@@ -67,7 +65,7 @@ vagrant@vagrant-ubuntu-trusty-64$ cd /opt/webrtc
 
 ## provision
 
-We're using `ansible` to configure machines so e.g. to provision a vagrant
+We're using `ansible` to configure machines so e.g. to provision a `vagrant`
 managed vm:
 
 ```bash
@@ -77,11 +75,12 @@ $ ansible-playbook site.yml -i inventories/vagrant
 
 ## scripts
 
-These are in `scripts/` and based on:
+Helpers for doing minor things the WebRTC build system doesn't are in
+`scripts/` and based on:
 
 * https://github.com/pristineio/webrtc-build-scripts
 
-They are dumped in `/opt/webrtc/scipts/` by `ansible` when provisioning so if
+They are dumped in `/opt/webrtc/scipts/` by `ansible` when provisioning, so if
 e.g. you provisioned a `vagrant` vm you can do: 
 
 ```bash
@@ -94,12 +93,12 @@ but you'll typically just use `make`.
 
 ### make
 
-The orchestration for building, packaging and publishing using:
+Building and packaging using:
 
 * [depot_tools](http://www.chromium.org/developers/how-tos/depottools) and
 * `scripts/`
 
-is done using a :neckbeard: `make` file. Its copied to `/opt/webrtc/Makefile` by `ansible`
+is done using a :neckbeard: `make` file and copied to `/opt/webrtc/Makefile` by `ansible`
 when provisioning. So e.g. to do everything:
 
 ```bash
@@ -108,13 +107,11 @@ $ make all
 ...
 ```
 
-or to step manually for an explicit target, e.g. `linux_arm_debug`, do:
+or for a specific target, e.g. `linux_arm_debug`, do:
 
 ```bash
-$ make build_linux_arm_debug
-...
-$ make pkg_linux_arm_debug
-...
-$ make pub_linux_arm_debug
+$ make linux_arm_debug
 ...
 ```
+
+with the resulting packages output to `build/`.

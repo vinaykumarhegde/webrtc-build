@@ -1,4 +1,13 @@
 ---
+- name: bashrc
+  copy:
+    src: etc/profile.d/bashrc.sh
+    dest: /etc/profile.d/bashrc.sh
+    owner: root
+    group: root
+    mode: 0755
+  sudo: yes
+
 - name: bash aliases
   copy:
     src: etc/profile.d/bash_aliases.sh
