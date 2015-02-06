@@ -3,6 +3,9 @@
   tasks: []
   vars:
     webrtc_build_src: ../
+    webrtc_dev_gclient:
+      url: https://chromium.googlesource.com/external/webrtc.git@75025434bf44860b3ca6228e9ac525fa44609f76
+      custom_deps: {}
   roles:
   - common
   - chromium_dev

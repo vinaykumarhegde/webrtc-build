@@ -4,6 +4,10 @@
   sudo: yes
   tags: [webrtc-dev]
 
+- name: create gclient conf
+  template: src=gclient.j2 dest=/opt/webrtc/.gclient mode=0644
+  tags: [webrtc-dev]
+
 - name: fetching (can take HOURS!)
   shell: source /etc/profile && fetch webrtc
   args:
@@ -40,7 +44,7 @@
   tags: [webrtc-dev]
 
 - name: syncing (can take HOURS!)
-  shell: source /etc/profile && gclient sync{{ " --revision {0}".format(webrtc_dev_revision) if webrtc_dev_revision else "" }}
+  shell: source /etc/profile && gclient sync
   args:
     chdir: /opt/webrtc
     executable: /bin/bash

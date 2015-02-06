@@ -80,7 +80,7 @@ $(DST)/$(LINUX_x86_64_DEBUG_DEB): \
 $(addprefix $(LINUX_x86_64_DEBUG_DST)/root/usr/include/jingle, $(HEADERS)) \
 $(LINUX_x86_64_DEBUG_DST)/root/usr/lib/pkgconfig/libjingle.pc \
 $(LINUX_x86_64_DEBUG_DST)/root/usr/lib/libjingle.a
-	rm $@ && cd $(DST) && fpm -s dir -t deb -a x86_64 -n libjingle-dev -v $(DEB_VERSION)debug --iteration $(DEB_REVISION) -C $(LINUX_x86_64_DEBUG_DST)/root .
+	rm -rf $@ && cd $(DST) && fpm -s dir -t deb -a x86_64 -n libjingle-dev -v $(DEB_VERSION)debug --iteration $(DEB_REVISION) -C $(LINUX_x86_64_DEBUG_DST)/root .
 
 linux_x86_64_debug: $(DST)/$(LINUX_x86_64_DEBUG_DEB)
 
@@ -111,7 +111,7 @@ $(DST)/$(LINUX_x86_64_RELEASE_DEB): \
 $(addprefix $(LINUX_x86_64_RELEASE_DST)/root/usr/include/jingle, $(HEADERS)) \
 $(LINUX_x86_64_RELEASE_DST)/root/usr/lib/pkgconfig/libjingle.pc \
 $(LINUX_x86_64_RELEASE_DST)/root/usr/lib/libjingle.a
-	rm $@ && cd $(DST) && fpm -s dir -t deb -a x86_64 -n libjingle-dev -v $(DEB_VERSION)release --iteration $(DEB_REVISION) -C $(LINUX_x86_64_RELEASE_DST)/root .
+	rm -rf $@ && cd $(DST) && fpm -s dir -t deb -a x86_64 -n libjingle-dev -v $(DEB_VERSION)release --iteration $(DEB_REVISION) -C $(LINUX_x86_64_RELEASE_DST)/root .
 
 linux_x86_64_release: $(DST)/$(LINUX_x86_64_RELEASE_DEB)
 
@@ -142,7 +142,7 @@ $(DST)/$(LINUX_ARMHF_DEBUG_DEB): \
 $(addprefix $(LINUX_ARMHF_DEBUG_DST)/root/usr/include/jingle, $(HEADERS)) \
 $(LINUX_ARMHF_DEBUG_DST)/root/usr/lib/pkgconfig/libjingle.pc \
 $(LINUX_ARMHF_DEBUG_DST)/root/usr/lib/libjingle.a
-	rm $@ && cd $(DST) && fpm -s dir -t deb -a armhf -n libjingle-dev -v $(DEB_VERSION)debug --iteration $(DEB_REVISION) -C $(LINUX_ARMHF_DEBUG_DST)/root .
+	rm -rf $@ && cd $(DST) && fpm -s dir -t deb -a armhf -n libjingle-dev -v $(DEB_VERSION)debug --iteration $(DEB_REVISION) -C $(LINUX_ARMHF_DEBUG_DST)/root .
 
 linux_armhf_debug: $(DST)/$(LINUX_ARMHF_DEBUG_DEB)
 
@@ -173,6 +173,6 @@ $(DST)/$(LINUX_ARMHF_RELEASE_DEB): \
 $(addprefix $(LINUX_ARMHF_RELEASE_DST)/root/usr/include/jingle, $(HEADERS)) \
 $(LINUX_ARMHF_RELEASE_DST)/root/usr/lib/pkgconfig/libjingle.pc \
 $(LINUX_ARMHF_RELEASE_DST)/root/usr/lib/libjingle.a
-	rm $@ && cd $(DST) && fpm -s dir -t deb -a armhf -n libjingle-dev -v $(DEB_VERSION)release --iteration $(DEB_REVISION) -C $(LINUX_ARMHF_RELEASE_DST)/root .
+	rm -rf $@ && cd $(DST) && fpm -s dir -t deb -a armhf -n libjingle-dev -v $(DEB_VERSION)release --iteration $(DEB_REVISION) -C $(LINUX_ARMHF_RELEASE_DST)/root .
 
 linux_armhf_release: $(DST)/$(LINUX_ARMHF_RELEASE_DEB)

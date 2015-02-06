@@ -1,3 +1,6 @@
 ---
 webrtc_dev_branch: master
-webrtc_dev_revision: 
+webrtc_dev_revision:
+webrtc_dev_gclient:
+  url: https://chromium.googlesource.com/external/webrtc.git
+  custom_deps: {}
