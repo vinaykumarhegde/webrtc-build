@@ -328,6 +328,7 @@
 /webrtc/base/win32filesystem.h
 /webrtc/base/virtualsocketserver.h
 /webrtc/base/scoped_ptr.h
+/webrtc/base/template_util.h
 /webrtc/base/sslstreamadapter.h
 /webrtc/base/socketserver.h
 /webrtc/base/stringencode.h
@@ -500,6 +501,7 @@
 /webrtc/overrides/webrtc/base/constructormagic.h
 /webrtc/video_receive_stream.h
 /webrtc/common_video/plane.h
+/webrtc/common_video/rotation.h
 /webrtc/common_video/interface/native_handle.h
 /webrtc/common_video/interface/video_image.h
 /webrtc/common_video/interface/texture_video_frame.h
@@ -604,10 +606,7 @@
 /webrtc/system_wrappers/source/critical_section_win.h
 /webrtc/system_wrappers/source/trace_posix.h
 /webrtc/system_wrappers/source/trace_win.h
-/webrtc/system_wrappers/source/rw_lock_generic.h
 /webrtc/system_wrappers/source/condition_variable_posix.h
-/webrtc/system_wrappers/source/rw_lock_posix.h
-/webrtc/system_wrappers/source/rw_lock_win.h
 /webrtc/system_wrappers/source/thread_posix.h
 /webrtc/system_wrappers/source/spreadsortlib/spreadsort.hpp
 /webrtc/system_wrappers/source/spreadsortlib/constants.hpp

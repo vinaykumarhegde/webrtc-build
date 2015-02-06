@@ -166,16 +166,19 @@ Requires:
 Requires.private:
 Conflicts:
 Cflags: \
--I<%text>${includedir}\</%text>
+-I<%text>${includedir} \</%text>
 % for define in config.defines:
--D${define} <%text>\</%text>
+${define} <%text>\</%text>
 % endfor
 
 Libs: \
--L<%text>${libdir}\</%text>
+-L<%text>${libdir} \</%text>
+-ljingle <%text>\</%text>
 % for lib in config.libs:
 ${lib} <%text>\</%text>
 % endfor
+-lpthread <%text>\</%text>
+
 """
     
     def __init__(self, prefix, version, ninja):
@@ -234,13 +237,14 @@ END
     
     def __call__(self):
         logger.debug('rendering script')
-        renderer = str(self)
+        rendered = str(self)
         
         tmp_fd, tmp_path = tempfile.mkstemp(prefix='libjingle_', suffix='.ar')
         logger.info('writing script to "%s"', tmp_path)
         with open(tmp_path, 'w') as tmp_fo:
             os.close(tmp_fd)
-            tmp_fo.write(renderer)
+            logger.debug('\n%s', rendered)
+            tmp_fo.write(rendered)
             
         command = [self.ar, '-M']
         logger.info('call(%s) w/ cwd "%s"', ' '.join(command), self.archive.work_dir)
@@ -266,7 +270,7 @@ def create_pkg_config(args):
     work_dir = os.path.abspath(args.work[0])
     with open(os.path.join(work_dir, 'obj', 'talk', 'libjingle_peerconnection_so.ninja'), 'r') as fo:
         ninja = Ninja(fo)
-    pkg_config = PkgConfig(version=args.version[0], prefix='/usr/local', ninja=ninja)
+    pkg_config = PkgConfig(version=args.version[0], prefix='/usr', ninja=ninja)
     print pkg_config
 
 

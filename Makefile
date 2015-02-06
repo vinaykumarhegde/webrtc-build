@@ -15,22 +15,22 @@ LINUX_x86_64_DST=$(DST)/linux_x86_64
 
 LINUX_x86_64_DEBUG_SRC=$(LINUX_x86_64_SRC)/Debug
 LINUX_x86_64_DEBUG_DST=$(LINUX_x86_64_DST)/debug
-LINUX_x86_64_DEBUG_DEB=libjingle_$(DEB_VERSION)debug-$(DEB_REVISION)_amd64.deb
+LINUX_x86_64_DEBUG_DEB=libjingle-dev_$(DEB_VERSION)debug-$(DEB_REVISION)_amd64.deb
 
 LINUX_x86_64_RELEASE_SRC=$(LINUX_x86_64_SRC)/Release
 LINUX_x86_64_RELEASE_DST=$(LINUX_x86_64_DST)/release
-LINUX_x86_64_RELEASE_DEB=libjingle_$(DEB_VERSION)release-$(DEB_REVISION)_amd64.deb
+LINUX_x86_64_RELEASE_DEB=libjingle-dev_$(DEB_VERSION)release-$(DEB_REVISION)_amd64.deb
 
 LINUX_ARMHF_SRC=$(SRC_OUT)/linux_armv7hf
 LINUX_ARMHF_DST=$(DST)/linux_armhf
 
 LINUX_ARMHF_DEBUG_SRC=$(LINUX_ARMHF_SRC)/Debug
 LINUX_ARMHF_DEBUG_DST=$(LINUX_ARMHF_DST)/debug
-LINUX_ARMHF_DEBUG_DEB=libjingle_$(DEB_VERSION)debug-$(DEB_REVISION)_armhf.deb
+LINUX_ARMHF_DEBUG_DEB=libjingle-dev_$(DEB_VERSION)debug-$(DEB_REVISION)_armhf.deb
 
 LINUX_ARMHF_RELEASE_SRC=$(LINUX_ARMHF_SRC)/Release
 LINUX_ARMHF_RELEASE_DST=$(LINUX_ARMHF_DST)/release
-LINUX_ARMHF_RELEASE_DEB=libjingle_$(DEB_VERSION)release-$(DEB_REVISION)_armhf.deb
+LINUX_ARMHF_RELEASE_DEB=libjingle-dev_$(DEB_VERSION)release-$(DEB_REVISION)_armhf.deb
 
 all: \
 linux_x86_64_debug \
@@ -68,19 +68,19 @@ $(LINUX_x86_64_DEBUG_DST)/root/usr/lib/libjingle.a: $(LINUX_x86_64_DEBUG_SRC)/li
 	mkdir -p $(dir $@)
 	cp $< $@
 
-$(LINUX_x86_64_DEBUG_DST)/root/usr/lib/pkconfig/libjingle.pc: $(LINUX_x86_64_DEBUG_SRC)/obj/talk/libjingle_peerconnection_so.ninja
+$(LINUX_x86_64_DEBUG_DST)/root/usr/lib/pkgconfig/libjingle.pc: $(LINUX_x86_64_DEBUG_SRC)/obj/talk/libjingle_peerconnection_so.ninja
 	mkdir -p $(dir $@)
 	$(SCRIPTS)/libjingle pkg-config $(LINUX_x86_64_DEBUG_SRC) $(PKGCONFIG_VERSION) > $@
 
-$(addprefix $(LINUX_x86_64_DEBUG_DST)/root, $(HEADERS)):
+$(addprefix $(LINUX_x86_64_DEBUG_DST)/root/usr/include/jingle, $(HEADERS)):
 	mkdir -p $(dir $@)
-	cp $(subst $(LINUX_x86_64_DEBUG_DST)/root, $(SRC_ROOT), $@) $@
+	cp $(subst $(LINUX_x86_64_DEBUG_DST)/root/usr/include/jingle, $(SRC_ROOT), $@) $@
 
 $(DST)/$(LINUX_x86_64_DEBUG_DEB): \
-$(addprefix $(LINUX_x86_64_DEBUG_DST)/root, $(HEADERS)) \
-$(LINUX_x86_64_DEBUG_DST)/root/usr/lib/pkconfig/libjingle.pc \
+$(addprefix $(LINUX_x86_64_DEBUG_DST)/root/usr/include/jingle, $(HEADERS)) \
+$(LINUX_x86_64_DEBUG_DST)/root/usr/lib/pkgconfig/libjingle.pc \
 $(LINUX_x86_64_DEBUG_DST)/root/usr/lib/libjingle.a
-	cd $(DST) && fpm -s dir -t deb -a x86_64 -n libjingle -v $(DEB_VERSION)debug --iteration $(DEB_REVISION) $(LINUX_x86_64_DEBUG_DST)/root
+	rm $@ && cd $(DST) && fpm -s dir -t deb -a x86_64 -n libjingle-dev -v $(DEB_VERSION)debug --iteration $(DEB_REVISION) -C $(LINUX_x86_64_DEBUG_DST)/root .
 
 linux_x86_64_debug: $(DST)/$(LINUX_x86_64_DEBUG_DEB)
 
@@ -99,19 +99,19 @@ $(LINUX_x86_64_RELEASE_DST)/root/usr/lib/libjingle.a: $(LINUX_x86_64_RELEASE_SRC
 	mkdir -p $(dir $@)
 	cp $< $@
 
-$(LINUX_x86_64_RELEASE_DST)/root/usr/lib/pkconfig/libjingle.pc: $(LINUX_x86_64_RELEASE_SRC)/obj/talk/libjingle_peerconnection_so.ninja
+$(LINUX_x86_64_RELEASE_DST)/root/usr/lib/pkgconfig/libjingle.pc: $(LINUX_x86_64_RELEASE_SRC)/obj/talk/libjingle_peerconnection_so.ninja
 	mkdir -p $(dir $@)
 	$(SCRIPTS)/libjingle pkg-config $(LINUX_x86_64_RELEASE_SRC) $(PKGCONFIG_VERSION) > $@
 
-$(addprefix $(LINUX_x86_64_RELEASE_DST)/root, $(HEADERS)):
+$(addprefix $(LINUX_x86_64_RELEASE_DST)/root/usr/include/jingle, $(HEADERS)):
 	mkdir -p $(dir $@)
-	cp $(subst $(LINUX_x86_64_RELEASE_DST)/root, $(SRC_ROOT), $@) $@
+	cp $(subst $(LINUX_x86_64_RELEASE_DST)/root/usr/include/jingle, $(SRC_ROOT), $@) $@
 
 $(DST)/$(LINUX_x86_64_RELEASE_DEB): \
-$(addprefix $(LINUX_x86_64_RELEASE_DST)/root, $(HEADERS)) \
-$(LINUX_x86_64_RELEASE_DST)/root/usr/lib/pkconfig/libjingle.pc \
+$(addprefix $(LINUX_x86_64_RELEASE_DST)/root/usr/include/jingle, $(HEADERS)) \
+$(LINUX_x86_64_RELEASE_DST)/root/usr/lib/pkgconfig/libjingle.pc \
 $(LINUX_x86_64_RELEASE_DST)/root/usr/lib/libjingle.a
-	cd $(DST) && fpm -s dir -t deb -a x86_64 -n libjingle -v $(DEB_VERSION)release --iteration $(DEB_REVISION) $(LINUX_x86_64_RELEASE_DST)/root
+	rm $@ && cd $(DST) && fpm -s dir -t deb -a x86_64 -n libjingle-dev -v $(DEB_VERSION)release --iteration $(DEB_REVISION) -C $(LINUX_x86_64_RELEASE_DST)/root .
 
 linux_x86_64_release: $(DST)/$(LINUX_x86_64_RELEASE_DEB)
 
@@ -130,19 +130,19 @@ $(LINUX_ARMHF_DEBUG_DST)/root/usr/lib/libjingle.a: $(LINUX_ARMHF_DEBUG_SRC)/libj
 	mkdir -p $(dir $@)
 	cp $< $@
 
-$(LINUX_ARMHF_DEBUG_DST)/root/usr/lib/pkconfig/libjingle.pc: $(LINUX_ARMHF_DEBUG_SRC)/obj/talk/libjingle_peerconnection_so.ninja
+$(LINUX_ARMHF_DEBUG_DST)/root/usr/lib/pkgconfig/libjingle.pc: $(LINUX_ARMHF_DEBUG_SRC)/obj/talk/libjingle_peerconnection_so.ninja
 	mkdir -p $(dir $@)
 	$(SCRIPTS)/libjingle pkg-config $(LINUX_ARMHF_DEBUG_SRC) $(PKGCONFIG_VERSION) > $@
 
-$(addprefix $(LINUX_ARMHF_DEBUG_DST)/root, $(HEADERS)):
+$(addprefix $(LINUX_ARMHF_DEBUG_DST)/root/usr/include/jingle, $(HEADERS)):
 	mkdir -p $(dir $@)
-	cp $(subst $(LINUX_ARMHF_DEBUG_DST)/root, $(SRC_ROOT), $@) $@
+	cp $(subst $(LINUX_ARMHF_DEBUG_DST)/root/usr/include/jingle, $(SRC_ROOT), $@) $@
 
 $(DST)/$(LINUX_ARMHF_DEBUG_DEB): \
-$(addprefix $(LINUX_ARMHF_DEBUG_DST)/root, $(HEADERS)) \
-$(LINUX_ARMHF_DEBUG_DST)/root/usr/lib/pkconfig/libjingle.pc \
+$(addprefix $(LINUX_ARMHF_DEBUG_DST)/root/usr/include/jingle, $(HEADERS)) \
+$(LINUX_ARMHF_DEBUG_DST)/root/usr/lib/pkgconfig/libjingle.pc \
 $(LINUX_ARMHF_DEBUG_DST)/root/usr/lib/libjingle.a
-	cd $(DST) && fpm -s dir -t deb -a armhf -n libjingle -v $(DEB_VERSION)debug --iteration $(DEB_REVISION) $(LINUX_ARMHF_DEBUG_DST)/root
+	rm $@ && cd $(DST) && fpm -s dir -t deb -a armhf -n libjingle-dev -v $(DEB_VERSION)debug --iteration $(DEB_REVISION) -C $(LINUX_ARMHF_DEBUG_DST)/root .
 
 linux_armhf_debug: $(DST)/$(LINUX_ARMHF_DEBUG_DEB)
 
@@ -161,18 +161,18 @@ $(LINUX_ARMHF_RELEASE_DST)/root/usr/lib/libjingle.a: $(LINUX_ARMHF_RELEASE_SRC)/
 	mkdir -p $(dir $@)
 	cp $< $@
 
-$(LINUX_ARMHF_RELEASE_DST)/root/usr/lib/pkconfig/libjingle.pc: $(LINUX_ARMHF_RELEASE_SRC)/obj/talk/libjingle_peerconnection_so.ninja
+$(LINUX_ARMHF_RELEASE_DST)/root/usr/lib/pkgconfig/libjingle.pc: $(LINUX_ARMHF_RELEASE_SRC)/obj/talk/libjingle_peerconnection_so.ninja
 	mkdir -p $(dir $@)
 	$(SCRIPTS)/libjingle pkg-config $(LINUX_ARMHF_RELEASE_SRC) $(PKGCONFIG_VERSION) > $@
 
-$(addprefix $(LINUX_ARMHF_RELEASE_DST)/root, $(HEADERS)):
+$(addprefix $(LINUX_ARMHF_RELEASE_DST)/root/usr/include/jingle, $(HEADERS)):
 	mkdir -p $(dir $@)
-	cp $(subst $(LINUX_ARMHF_RELEASE_DST)/root, $(SRC_ROOT), $@) $@
+	cp $(subst $(LINUX_ARMHF_RELEASE_DST)/root/usr/include/jingle, $(SRC_ROOT), $@) $@
 
 $(DST)/$(LINUX_ARMHF_RELEASE_DEB): \
-$(addprefix $(LINUX_ARMHF_RELEASE_DST)/root, $(HEADERS)) \
-$(LINUX_ARMHF_RELEASE_DST)/root/usr/lib/pkconfig/libjingle.pc \
+$(addprefix $(LINUX_ARMHF_RELEASE_DST)/root/usr/include/jingle, $(HEADERS)) \
+$(LINUX_ARMHF_RELEASE_DST)/root/usr/lib/pkgconfig/libjingle.pc \
 $(LINUX_ARMHF_RELEASE_DST)/root/usr/lib/libjingle.a
-	cd $(DST) && fpm -s dir -t deb -a armhf -n libjingle -v $(DEB_VERSION)release --iteration $(DEB_REVISION) $(LINUX_ARMHF_RELEASE_DST)/root
+	rm $@ && cd $(DST) && fpm -s dir -t deb -a armhf -n libjingle-dev -v $(DEB_VERSION)release --iteration $(DEB_REVISION) -C $(LINUX_ARMHF_RELEASE_DST)/root .
 
 linux_armhf_release: $(DST)/$(LINUX_ARMHF_RELEASE_DEB)
