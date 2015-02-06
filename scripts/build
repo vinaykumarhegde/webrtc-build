@@ -67,10 +67,7 @@ function buildenv() {
         common
         ${WEBRTC_OS}
         ${WEBRTC_ARCH}
-        ${WEBRTC_BUILD}
         ${WEBRTC_OS}_${WEBRTC_ARCH}
-        ${WEBRTC_OS}_${WEBRTC_BUILD}
-        ${WEBRTC_OS}_${WEBRTC_ARCH}_${WEBRTC_BUILD}
     )
     for target in "${targets[@]}"; do
         target="buildenv_${target,,}"
@@ -93,6 +90,9 @@ host_os=linux \
 build_with_libjingle=1 \
 build_with_chromium=0 \
 clang=1 \
+enable_tracing=1 \
+disable_iterator_debugging=1 \
+disable_glibcxx_debug=1 \
 "
     GYP_GENERATOR_FLAGS=${GYP_GENERATOR_FLAGS}" \
 output_dir=${WEBRTC_OUT} \
@@ -116,32 +116,11 @@ target_arch=x64 \
 "
 }
 
-function buildenv_debug() {
-    GYP_DEFINES=${GYP_DEFINES}" \
-enable_tracing=1 \
-"
-    WEBRTC_BUILD=Debug
-}
-
-function buildenv_release() {
-    GYP_DEFINES=${GYP_DEFINES}" \
-enable_tracing=0 \
-"
-    WEBRTC_BUILD=Release
-}
-
 function buildenv_linux() {
     GYP_DEFINES=${GYP_DEFINES}" \
 OS=linux \
 "
     WEBRTC_TARGET="libjingle_peerconnection_so"
-}
-
-function buildenv_linux_debug() {
-    GYP_DEFINES=${GYP_DEFINES}" \
-disable_iterator_debugging=1 \
-disable_glibcxx_debug=1 \
-"
 }
 
 # build
