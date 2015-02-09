@@ -4,23 +4,24 @@
   sudo: yes
   tags: [webrtc-dev]
 
-- name: create gclient conf
-  template: src=gclient.j2 dest=/opt/webrtc/.gclient mode=0644
-  tags: [webrtc-dev]
-
 - name: fetching (can take HOURS!)
   shell: source /etc/profile && fetch webrtc
   args:
     chdir: /opt/webrtc
-    creates: /opt/webrtc/src
     executable: /bin/bash
+  register: fetch
   tags: [webrtc-dev]
 
-- name: checkout
-  shell: source /etc/profile && git checkout {{ webrtc_dev_branch }} && git pull
+- name: create gclient conf
+  template: src=gclient.j2 dest=/opt/webrtc/.gclient mode=0644
+  tags: [webrtc-dev]
+
+- name: sync (can take HOURS!)
+  shell: source /etc/profile && gclient sync
   args:
-    chdir: /opt/webrtc/src
+    chdir: /opt/webrtc
     executable: /bin/bash
+  when: fetch|changed
   tags: [webrtc-dev]
 
 - name: copy build/common.gypi sysroot patch

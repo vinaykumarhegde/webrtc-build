@@ -1,9 +1,12 @@
 ---
+- name: create depot_tools dir
+  file: path=/opt/depot_tools state=directory mode=0777
+  sudo: yes
+
 - name: clone depot_tools
   git:
     repo: https://chromium.googlesource.com/chromium/tools/depot_tools.git
     dest: /opt/depot_tools
-  sudo: yes
 
 - name: set depot_tools profile
   copy:

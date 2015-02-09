@@ -1,0 +1,13 @@
+solutions = [
+  { "name": "src",
+    "url": "{{ webrtc_dev_gclient.url }}",
+    "deps_file": "DEPS",
+    "managed": True,
+    "custom_deps": {
+{% for custom_dep in webrtc_dev_gclient.custom_deps %}
+      "{{ custom_dep.path }}": "{{ custom_dep.url }}",
+{% endfor %}
+    },
+    "safesync_url": "",
+  },
+]
