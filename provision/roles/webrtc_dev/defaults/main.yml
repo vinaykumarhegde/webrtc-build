@@ -1,4 +1,5 @@
 ---
+webrtc_dev_group: root
 webrtc_dev_branch: master
 webrtc_dev_revision:
 webrtc_dev_gclient:

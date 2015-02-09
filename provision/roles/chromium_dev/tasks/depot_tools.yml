@@ -1,6 +1,6 @@
 ---
 - name: create depot_tools dir
-  file: path=/opt/depot_tools state=directory mode=0777
+  file: path=/opt/depot_tools state=directory group={{ chromium_dev_group }} mode=0775
   sudo: yes
 
 - name: clone depot_tools

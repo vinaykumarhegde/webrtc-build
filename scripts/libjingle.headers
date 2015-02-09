@@ -319,6 +319,7 @@
 /webrtc/video_decoder.h
 /webrtc/base/faketaskrunner.h
 /webrtc/base/checks.h
+/webrtc/base/compile_assert.h
 /webrtc/base/mathutils.h
 /webrtc/base/win32socketinit.h
 /webrtc/base/socket.h

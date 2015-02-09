@@ -1,6 +1,6 @@
 ---
 - name: create build directory
-  file: path=/opt/webrtc state=directory owner=root group=root mode=0777
+  file: path=/opt/webrtc state=directory group={{ webrtc_dev_group }} mode=0775
   sudo: yes
   tags: [webrtc-dev]
 

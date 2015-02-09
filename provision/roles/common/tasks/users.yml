@@ -16,3 +16,10 @@
     group: root
     mode: 0755
   sudo: yes
+
+- group: name=dev state=present
+  sudo: yes
+
+- user: name={{ item }} groups=dev append=yes
+  with_items: common_dev_users
+  sudo: yes
