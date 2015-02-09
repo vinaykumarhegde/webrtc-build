@@ -9,6 +9,7 @@
   args:
     chdir: /opt/webrtc
     executable: /bin/bash
+    creates: /opt/webrtc/src
   register: fetch
   tags: [webrtc-dev]
 
@@ -50,3 +51,11 @@
     chdir: /opt/webrtc
     executable: /bin/bash
   tags: [webrtc-dev]
+
+- name: install arm sysroot
+  shell: source /etc/profile && src/chromium/src/chrome/installer/linux/sysroot_scripts/install-debian.wheezy.sysroot.py --arch=arm
+  args:
+    chdir: /opt/webrtc
+    executable: /bin/bash
+    creates: /opt/webrtc/src/chromium/src/chrome/installer/linux/debian_wheezy_arm-sysroot
+  tags: [webrtc-dev, sysroot]
