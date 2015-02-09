@@ -7,7 +7,7 @@ ROOT=$(shell pwd)
 SCRIPTS=$(ROOT)/scripts
 HEADERS=$(shell cat $(SCRIPTS)/libjingle.headers)
 PKGCONFIG_VERSION?=1.0.0
-DEB_VERSION?=1.0.0
+DEB_VERSION?=$(shell cd ${SRC_ROOT} && git rev-parse --short HEAD)
 DEB_REVISION?=1
 
 LINUX_x86_64_SRC=$(SRC_OUT)/linux_x86_64
