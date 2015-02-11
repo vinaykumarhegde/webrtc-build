@@ -256,6 +256,7 @@
 /webrtc/common_audio/include/audio_util.h
 /webrtc/common_audio/fir_filter_sse.h
 /webrtc/common_audio/audio_converter.h
+/webrtc/common_video/rotation.h
 /webrtc/engine_configurations.h
 /webrtc/voice_engine/transmit_mixer.h
 /webrtc/voice_engine/utility.h
@@ -319,7 +320,6 @@
 /webrtc/video_decoder.h
 /webrtc/base/faketaskrunner.h
 /webrtc/base/checks.h
-/webrtc/base/compile_assert.h
 /webrtc/base/mathutils.h
 /webrtc/base/win32socketinit.h
 /webrtc/base/socket.h

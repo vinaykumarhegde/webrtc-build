@@ -27,7 +27,7 @@
 
 - name: copy build/common.gypi sysroot patch
   copy: src=webrtc_build_common_gypi_sysroot.patch dest=/opt/webrtc_build_common_gypi_sysroot.patch mode=0644
-  tags: [webrtc-dev]
+  tags: [webrtc-dev,patch]
   sudo: yes
 
 - name: check build/common.gypi sysroot patch
@@ -36,14 +36,14 @@
     chdir: /opt/webrtc/src/build
   register: git_apply_check_sysroot_patch
   failed_when: git_apply_check_sysroot_patch.rc not in [0, 1]
-  tags: [webrtc-dev]
+  tags: [webrtc-dev,patch]
 
 - name: apply build/common.gypi sysroot patch
   command: git apply /opt/webrtc_build_common_gypi_sysroot.patch
   args:
     chdir: /opt/webrtc/src/build
   when: git_apply_check_sysroot_patch.rc == 0
-  tags: [webrtc-dev]
+  tags: [webrtc-dev,patch]
 
 - name: syncing (can take HOURS!)
   shell: source /etc/profile && gclient sync
