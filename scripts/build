@@ -15,6 +15,7 @@
 #   GYP_GENERATORS=
 #   GYP_GENERATOR_FLAGS=
 #   GYP_CROSSCOMPILE=
+#   GYP_INCLUDE_LAST=
 #
 # and then does ~:
 #
@@ -59,6 +60,7 @@ GYP_DEFINES=
 GYP_GENERATORS=
 GYP_GENERATOR_FLAGS=
 GYP_CROSSCOMPILE=
+GYP_INCLUDE_LAST="${SCRIPTS}/custom.gypi"
 
 # environment
 
@@ -120,6 +122,7 @@ target_arch=x64 \
 function buildenv_linux() {
     GYP_DEFINES=${GYP_DEFINES}" \
 OS=linux \
+use_rtti=1 \
 "
     WEBRTC_TARGET="libjingle_peerconnection_so"
 }
@@ -168,6 +171,7 @@ function build_common() {
     echo "  GYP_GENERATORS=${GYP_GENERATORS}"
     echo "  GYP_GENERATOR_FLAGS=${GYP_GENERATOR_FLAGS}"
     echo "  GYP_CROSSCOMPILE=${GYP_CROSSCOMPILE}"
+    echo "  GYP_INCLUDE_LAST=${GYP_INCLUDE_LAST}"
     ninja -C ${WEBRTC_OUT}/${WEBRTC_BUILD} $WEBRTC_TARGET
     local rc=$?
     cd $working_dir
@@ -221,6 +225,7 @@ echo "GYP_DEFINES=${GYP_DEFINES}"
 echo "GYP_GENERATORS=${GYP_GENERATORS}"
 echo "GYP_GENERATOR_FLAGS=${GYP_GENERATOR_FLAGS}"
 echo "GYP_CROSSCOMPILE=${GYP_CROSSCOMPILE}"
+echo "GYP_INCLUDE_LAST=${GYP_INCLUDE_LAST}"
 if [ ! $DRY -eq 0 ]; then
     exit 0
 fi
@@ -230,6 +235,7 @@ export GYP_DEFINES=$GYP_DEFINES
 export GYP_GENERATORS=$GYP_GENERATORS
 export GYP_GENERATOR_FLAGS=$GYP_GENERATOR_FLAGS
 export GYP_CROSSCOMPILE=$GYP_CROSSCOMPILE
+export GYP_INCLUDE_LAST=$GYP_INCLUDE_LAST
 if ! build; then
     exit 3
 fi

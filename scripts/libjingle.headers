@@ -256,7 +256,11 @@
 /webrtc/common_audio/include/audio_util.h
 /webrtc/common_audio/fir_filter_sse.h
 /webrtc/common_audio/audio_converter.h
+/webrtc/common_video/plane.h
 /webrtc/common_video/rotation.h
+/webrtc/common_video/interface/i420_video_frame.h
+/webrtc/common_video/libyuv/include/scaler.h
+/webrtc/common_video/libyuv/include/webrtc_libyuv.h
 /webrtc/engine_configurations.h
 /webrtc/voice_engine/transmit_mixer.h
 /webrtc/voice_engine/utility.h
