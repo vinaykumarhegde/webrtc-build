@@ -57,7 +57,7 @@ $(DST):
 # linux x86_64 debug
 
 $(LINUX_x86_64_DEBUG_SRC)/libjingle.a $(LINUX_x86_64_DEBUG_SRC)/obj/talk/libjingle_peerconnection_so.ninja:
-	WEBRTC_OS=linux WEBRTC_ARCH=x86_64 WEBRTC_BUILD=Debug $(SCRIPTS)/build
+	WEBRTC_PROFILE=linux_x86_64 WEBRTC_BUILD=Debug $(SCRIPTS)/build
 
 $(LINUX_x86_64_DEBUG_DST): $(DST)
 	mkdir -p $@
@@ -88,7 +88,7 @@ linux_x86_64_debug: $(DST)/$(LINUX_x86_64_DEBUG_DEB)
 # linux x86_64 release
 
 $(LINUX_x86_64_RELEASE_SRC)/libjingle.a $(LINUX_x86_64_RELEASE_SRC)/obj/talk/libjingle_peerconnection_so.ninja:
-	WEBRTC_OS=linux WEBRTC_ARCH=x86_64 WEBRTC_BUILD=Release $(SCRIPTS)/build
+	WEBRTC_PROFILE=linux_x86_64 WEBRTC_BUILD=Release $(SCRIPTS)/build
 
 $(LINUX_x86_64_RELEASE_DST): $(DST)
 	mkdir -p $@
@@ -119,7 +119,7 @@ linux_x86_64_release: $(DST)/$(LINUX_x86_64_RELEASE_DEB)
 # linux armhf debug
 
 $(LINUX_ARMHF_DEBUG_SRC)/libjingle.a $(LINUX_ARMHF_DEBUG_SRC)/obj/talk/libjingle_peerconnection_so.ninja:
-	WEBRTC_OS=linux WEBRTC_ARCH=armv7hf WEBRTC_BUILD=Debug $(SCRIPTS)/build
+	WEBRTC_PROFILE=linux_armv7hf WEBRTC_BUILD=Debug $(SCRIPTS)/build
 
 $(LINUX_ARMHF_DEBUG_DST): $(DST)
 	mkdir -p $@
@@ -150,7 +150,7 @@ linux_armhf_debug: $(DST)/$(LINUX_ARMHF_DEBUG_DEB)
 # linux arm release
 
 $(LINUX_ARMHF_RELEASE_SRC)/libjingle.a $(LINUX_ARMHF_RELEASE_SRC)/obj/talk/libjingle_peerconnection_so.ninja:
-	WEBRTC_OS=linux WEBRTC_ARCH=armv7hf WEBRTC_BUILD=Release $(SCRIPTS)/build
+	WEBRTC_PROFILE=linux_armv7hf WEBRTC_BUILD=Release $(SCRIPTS)/build
 
 $(LINUX_ARMHF_RELEASE_DST): $(DST)
 	mkdir -p $@

@@ -2,8 +2,7 @@
 #
 # Utility WebRTC build scripts, which based on these:
 #
-#   WEBRTC_OS=${WEBRTC_OS:-"linux"}
-#   WEBRTC_ARCH=${WEBRTC_ARCH:-"x86_64"}
+#   WEBRTC_PROFILE=${WEBRTC_ARCH:-"x64"}
 #   WEBRTC_BUILD=${WEBRTC_BUILD:-"debug"}
 #   WEBRTC_SRC=${WEBRTC_SRC:-"src"}
 #   WEBRTC_ROOT=${WEBRTC_ROOT:-`pwd`}
@@ -27,13 +26,11 @@
 # Its based on: https://github.com/pristineio/webrtc-build-scripts.
 #
 
-WEBRTC_OS=${WEBRTC_OS:-"linux"}
-WEBRTC_ARCH=${WEBRTC_ARCH:-"x86_64"}
+WEBRTC_PROFILE=${WEBRTC_ARCH:-"x64"}
 WEBRTC_BUILD=${WEBRTC_BUILD:-"debug"}
 WEBRTC_SRC=${WEBRTC_SRC:-"src"}
 WEBRTC_ROOT=${WEBRTC_ROOT:-`pwd`}
-WEBRTC_OUT=${WEBRTC_OUT:-"out/${WEBRTC_OS}_${WEBRTC_ARCH}"}
-WEBRTC_TARGET=
+WEBRTC_OUT=${WEBRTC_OUT:-"out/${WEBRTC_PROFILE}"}
 
 USAGE="\
 [WEBRTC_{option}={value}]* $0 [-d|--dry] [-h|--help]
@@ -41,7 +38,7 @@ USAGE="\
 where WEBRTC_{option} is one of:
 
 WEBRTC_OS= Operating system, defaults to linux.
-WEBRTC_ARCH= Machine architecture, defaults to x86_64.
+WEBRTC_PROFILE= Profile name or file to be sourced.
 WEBRTC_BUILD= Built type, defaults to debug.
 WEBRTC_ROOT= Directory containing WebRTC source, defaults to '`pwd`'.
 WEBRTC_SRC= Name of WebRTC source directory in \${WEBRTC_ROOT}, defaults to src. 
@@ -53,109 +50,42 @@ e.g.
 "
 
 SCRIPTS=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )  # http://stackoverflow.com/a/246128
-
+PROFILES="${SCRIPTS}/profile.d"
 DRY=0
 
-GYP_DEFINES=
-GYP_GENERATORS=
-GYP_GENERATOR_FLAGS=
-GYP_CROSSCOMPILE=
-GYP_INCLUDE_LAST="${SCRIPTS}/custom.gypi"
+# profile
 
-# environment
+GYP_DEFINES=
+GYP_GENERATORS=ninja
+GYP_GENERATOR_FLAGS="output_dir=${WEBRTC_OUT}"
+GYP_CROSSCOMPILE=0
+GYP_INCLUDE_LAST="${SCRIPTS}/custom.gypi"
+WEBRTC_TARGET=
+
+# build
 
 function buildenv() {
-    local targets=(
-        common
-        ${WEBRTC_OS}
-        ${WEBRTC_ARCH}
-        ${WEBRTC_OS}_${WEBRTC_ARCH}
-    )
-    for target in "${targets[@]}"; do
-        target="buildenv_${target,,}"
-        declare -f ${target} > /dev/null;
-        local exists=$?
-        if [ $exists -ne 0 ]; then
-            continue
+    local profile=""
+    for file in "${WEBRTC_PROFILE}" "${PROFILES}/${WEBRTC_PROFILE}"; do
+        if [ -f $file ]; then
+            profile=$file
         fi
-        eval ${target}
     done
+    if [ $profile = "" ]; then
+        return 1
+    fi
+    echo "sourcing profile '${profile}'"
+    source "${profile}"
+    
     GYP_DEFINES=`echo $GYP_DEFINES | sed -e 's/^ *//' -e 's/ *$//'`
     GYP_GENERATORS=`echo $GYP_GENERATORS | sed -e 's/^ *//' -e 's/ *$//'`
     GYP_GENERATOR_FLAGS=`echo $GYP_GENERATOR_FLAGS | sed -e 's/^ *//' -e 's/ *$//'`
     GYP_CROSSCOMPILE=`echo $GYP_CROSSCOMPILE | sed -e 's/^ *//' -e 's/ *$//'`
 }
 
-function buildenv_common() {
-    GYP_DEFINES=${GYP_DEFINES}" \
-host_os=linux \
-build_with_libjingle=1 \
-build_with_chromium=0 \
-clang=1 \
-enable_tracing=1 \
-disable_iterator_debugging=1 \
-disable_glibcxx_debug=1 \
-"
-    GYP_GENERATOR_FLAGS=${GYP_GENERATOR_FLAGS}" \
-output_dir=${WEBRTC_OUT} \
-"
-    GYP_GENERATORS="ninja"
-}
-
-function buildenv_armv7hf() {
-    GYP_DEFINES=${GYP_DEFINES}" \
-target_arch=arm \
-arm_version=7 \
-arm_float_abi=hard \
-arm_neon=1 \
-arm_thumb=0 \
-"
-    GYP_CROSSCOMPILE=1
-}
-
-function buildenv_x86_64() {
-    GYP_DEFINES=${GYP_DEFINES}" \
-target_arch=x64 \
-"
-}
-
-function buildenv_linux() {
-    GYP_DEFINES=${GYP_DEFINES}" \
-OS=linux \
-use_rtti=1 \
-"
-    WEBRTC_TARGET="libjingle_peerconnection_so"
-}
-
-# build
-
 function build() {
-    local targets=(
-        common
-        ${WEBRTC_OS}
-        ${WEBRTC_ARCH}
-        ${WEBRTC_BUILD}
-        ${WEBRTC_OS}_${WEBRTC_ARCH}
-        ${WEBRTC_OS}_${WEBRTC_BUILD}
-        ${WEBRTC_OS}_${WEBRTC_ARCH}_${WEBRTC_BUILD}
-    )
-    for target in "${targets[@]}"; do
-        target="build_${target,,}"
-        declare -f ${target} > /dev/null;
-        local exists=$?
-        if [ $exists -ne 0 ]; then
-            continue
-        fi
-        eval ${target}
-        local rc=$?
-        if [ ! $rc -eq 0 ]; then
-            return $rc; 
-        fi
-    done
-}
-
-function build_common() {
     local working_dir=`pwd`
+    local build_dir="${WEBRTC_ROOT}/${WEBRTC_SRC}/${WEBRTC_OUT}/${WEBRTC_BUILD}"
 
     echo "running gclient hooks in '${WEBRTC_ROOT}/${WEBRTC_SRC}'"
     cd "${WEBRTC_ROOT}/${WEBRTC_SRC}"
@@ -181,10 +111,6 @@ function build_common() {
         echo "'${WEBRTC_TARGET}' build in '${WEBRTC_ROOT}/${WEBRTC_SRC}' failed (rc=${rc})"
         return $rc
     fi
-}
-
-function build_linux() {
-    local build_dir=${WEBRTC_ROOT}/${WEBRTC_SRC}/${WEBRTC_OUT}/${WEBRTC_BUILD}
     
     echo "building static-lib in '${build_dir}/libjingle.a'"
     ${SCRIPTS}/libjingle static-lib ${build_dir} -li -s

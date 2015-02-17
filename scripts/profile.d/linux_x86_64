@@ -1,0 +1,15 @@
+#!/bin/bash
+WEBRTC_TARGET="libjingle_peerconnection_so"
+
+GYP_DEFINES="
+OS=linux \
+host_os=linux \
+build_with_libjingle=1 \
+build_with_chromium=0 \
+clang=1 \
+enable_tracing=1 \
+disable_iterator_debugging=1 \
+disable_glibcxx_debug=1 \
+target_arch=x64 \
+use_rtti=1 \
+"
