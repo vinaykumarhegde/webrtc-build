@@ -2,11 +2,11 @@
 #
 # Utility WebRTC build scripts, which based on these:
 #
-#   WEBRTC_PROFILE=${WEBRTC_ARCH:-"x64"}
+#   WEBRTC_PROFILE=${WEBRTC_PROFILE:-"x64"}
 #   WEBRTC_BUILD=${WEBRTC_BUILD:-"debug"}
 #   WEBRTC_SRC=${WEBRTC_SRC:-"src"}
 #   WEBRTC_ROOT=${WEBRTC_ROOT:-`pwd`}
-#   WEBRTC_OUT=${WEBRTC_OUT:-"out/${WEBRTC_OS}_${WEBRTC_ARCH}"}
+#   WEBRTC_OUT=${WEBRTC_OUT:-"out/${WEBRTC_PROFILE}"}
 #
 # sets GYP build environment variables:
 #
@@ -26,7 +26,7 @@
 # Its based on: https://github.com/pristineio/webrtc-build-scripts.
 #
 
-WEBRTC_PROFILE=${WEBRTC_ARCH:-"x64"}
+WEBRTC_PROFILE=${WEBRTC_PROFILE:-"linux_x86_64"}
 WEBRTC_BUILD=${WEBRTC_BUILD:-"debug"}
 WEBRTC_SRC=${WEBRTC_SRC:-"src"}
 WEBRTC_ROOT=${WEBRTC_ROOT:-`pwd`}
@@ -37,16 +37,15 @@ USAGE="\
 
 where WEBRTC_{option} is one of:
 
-WEBRTC_OS= Operating system, defaults to linux.
-WEBRTC_PROFILE= Profile name or file to be sourced.
+WEBRTC_PROFILE= Profile name or file to be sourced, defaults to linux_x86_64.
 WEBRTC_BUILD= Built type, defaults to debug.
 WEBRTC_ROOT= Directory containing WebRTC source, defaults to '`pwd`'.
 WEBRTC_SRC= Name of WebRTC source directory in \${WEBRTC_ROOT}, defaults to src. 
-WEBRTC_OUT= Output directory in \$WEBRTC_ROOT/\$WEBRTC_SRC/out, \${WEBRTC_OS}_\${WEBRTC_ARCH}. 
+WEBRTC_OUT= Output directory in \$WEBRTC_ROOT/\$WEBRTC_SRC/out, \${WEBRTC_PROFILE}. 
 
 e.g.
 
-\$ WEBRTC_OS=linux WEBRTC_ARCH=armv7hf WEBRTC_BUILD=debug $0
+\$ WEBRTC_PROFILE=linux_armv7hf WEBRTC_BUILD=debug $0
 "
 
 SCRIPTS=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )  # http://stackoverflow.com/a/246128
