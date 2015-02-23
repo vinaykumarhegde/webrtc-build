@@ -1,0 +1,26 @@
+branches:
+  only:
+    - master
+
+cache:
+  directories:
+  - /opt/depot_tools
+  - /opt/webrtc
+
+language:
+  - cpp
+  - python
+
+python:
+  - "2.7"
+
+install:
+  - sudo pip install ansible
+  - cd provision
+  - ansible-playbook site.yml -i "localhost," --connection=local --sudo
+
+script:
+  - source /etc/profile
+  - cd /opt/webrtc/
+  - make clean
+  - make all
