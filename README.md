@@ -1,4 +1,4 @@
-# webrtc-build
+# webrtc-build [![Build Status](https://magnum.travis-ci.com/mayfieldrobotics/webrtc-build.svg?token=qHBoPmgQbWPVxfoYZkz1)](https://magnum.travis-ci.com/mayfieldrobotics/webrtc-build)
 
 Automation for:
 
