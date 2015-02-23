@@ -19,7 +19,7 @@
 # and then does ~:
 #
 #   $ cd $WEBRTC_ROOT
-#   $ gclient runhooks
+#   $ gclient sync
 #   $ cd $WEBRTC_SRC
 #   $ ninja -C $WEBRTC_OUT $WEBRTC_TARGET
 #
@@ -33,7 +33,7 @@ WEBRTC_ROOT=${WEBRTC_ROOT:-`pwd`}
 WEBRTC_OUT=${WEBRTC_OUT:-"out/${WEBRTC_PROFILE}"}
 
 USAGE="\
-[WEBRTC_{option}={value}]* $0 [-d|--dry] [-h|--help]
+[WEBRTC_{option}={value}]* $0 [-d|--dry] [-h|--help] [-r|--revision={webrtc-commit-hash}]
 
 where WEBRTC_{option} is one of:
 
@@ -51,6 +51,7 @@ e.g.
 SCRIPTS=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )  # http://stackoverflow.com/a/246128
 PROFILES="${SCRIPTS}/profile.d"
 DRY=0
+REVISION=
 
 # profile
 
@@ -85,22 +86,27 @@ function buildenv() {
 function build() {
     local working_dir=`pwd`
     local build_dir="${WEBRTC_ROOT}/${WEBRTC_SRC}/${WEBRTC_OUT}/${WEBRTC_BUILD}"
-
-    echo "running gclient hooks in '${WEBRTC_ROOT}/${WEBRTC_SRC}'"
-    cd "${WEBRTC_ROOT}/${WEBRTC_SRC}"
-    gclient runhooks
+    
+    echo "running gclient sync in '${WEBRTC_ROOT}' w/ revision ${REVISION}"
+    cd "${WEBRTC_ROOT}"
+    if [ -z "$REVISION" ]; then
+        gclient sync --revision="${REVISION}"
+    else
+        gclient sync
+    fi
     
     if [ ! -d "${WEBRTC_OUT}" ]; then
         echo "creating out dir '${WEBRTC_OUT}'"
         mkdir -p "${WEBRTC_OUT}"
     fi
 
-    echo "building '${WEBRTC_TARGET}' in '${WEBRTC_ROOT}/${WEBRTC_SRC}' with:"
+    echo "building '${WEBRTC_TARGET}' in '${WEBRTC_ROOT}/${WEBRTC_SRC}' w/:"
     echo "  GYP_DEFINES=${GYP_DEFINES}"
     echo "  GYP_GENERATORS=${GYP_GENERATORS}"
     echo "  GYP_GENERATOR_FLAGS=${GYP_GENERATOR_FLAGS}"
     echo "  GYP_CROSSCOMPILE=${GYP_CROSSCOMPILE}"
     echo "  GYP_INCLUDE_LAST=${GYP_INCLUDE_LAST}"
+    cd "${WEBRTC_ROOT}/${WEBRTC_SRC}"
     ninja -C ${WEBRTC_OUT}/${WEBRTC_BUILD} $WEBRTC_TARGET
     local rc=$?
     cd $working_dir
@@ -132,6 +138,10 @@ while [ $# -ge 1 ]; do
             ;;
         -d|--dry)
             DRY=1
+            ;;
+        -r|--revision)
+            shift
+            REVISION=$1
             ;;
         *)
             echo "invalid argument '${1}', see:"

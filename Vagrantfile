@@ -55,9 +55,9 @@ Vagrant.configure(2) do |config|
   # View the documentation for the provider you are using for more
   # information on available options.
   config.vm.provider "virtualbox" do |vb|
-     vb.memory = 2048
-     vb.cpus = 4
-   end
+    vb.memory = 2048
+    vb.cpus = 4
+  end
 
   # Define a Vagrant Push strategy for pushing to Atlas. Other push strategies
   # such as FTP and Heroku are also available. See the documentation at
@@ -73,4 +73,7 @@ Vagrant.configure(2) do |config|
   #   sudo apt-get update
   #   sudo apt-get install -y apache2
   # SHELL
+  config.vm.provision "ansible" do |ansible|
+    ansible.playbook = "provision/site.yml"
+  end
 end

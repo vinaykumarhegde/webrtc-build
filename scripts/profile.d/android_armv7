@@ -1,0 +1,15 @@
+#!/bin/bash
+WEBRTC_TARGET="libjingle_peerconnection_jar"
+
+GYP_DEFINES="\
+OS=android \
+host_os=linux \
+build_with_libjingle=1 \
+build_with_chromium=0 \
+clang=1 \
+enable_tracing=1 \
+target_arch=arm \
+arm_version=7 \
+"
+
+GYP_CROSSCOMPILE=1

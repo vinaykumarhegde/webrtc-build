@@ -19,8 +19,8 @@ This is based on:
 Controller needs:
 
 * [ansible](http://docs.ansible.com/intro_installation.html#installing-the-control-machine)
-* [vagrant](https://docs.vagrantup.com/v2/installation/) and
-* [python-vagrant](https://github.com/todddeluca/python-vagrant#install-from-pypipythonorg)
+* [vagrant](https://docs.vagrantup.com/v2/installation/)
+* [python-vagrant](https://github.com/todddeluca/python-vagrant#install-from-pypipythonorg) and
 * [netaddr](https://pypi.python.org/pypi/netaddr)
 
 so e.g. get them like:
@@ -44,33 +44,14 @@ spawn a vm using `vagrant`:
 
 ```bash
 $ vagrant up
-...
 ```
 
-then configure it using `ansible`:
-
-```bash
-$ cd ../provision
-$ ansible-playbook site.yml -i inventories/vagrant
-...
-```
-
-and start building out of `vagrant@/opt/webrtc`:
+and, **much** later once provisioning is done, start building out of `vagrant@/opt/webrtc`:
 
 ```bash
 $ cd ..
 $ vagrant ssh
 vagrant@vagrant-ubuntu-trusty-64$ cd /opt/webrtc
-```
-
-## provision
-
-We're using `ansible` to configure machines so e.g. to provision a `vagrant`
-managed vm:
-
-```bash
-$ cd provision/
-$ ansible-playbook site.yml -i inventories/vagrant
 ```
 
 ## scripts
@@ -86,7 +67,7 @@ e.g. you provisioned a `vagrant` vm you can do:
 ```bash
 $ vagrant ssh
 vagrant@vagrant-ubuntu-trusty-64$ cd /opt/webrtc
-vagrant@vagrant-ubuntu-trusty-64$ WEBRTC_OS=linux WEBRTC_ARCH=armv7hf WEBRTC_BUILD=debug ./scripts/build
+vagrant@vagrant-ubuntu-trusty-64$ WEBRTC_PROFILE=linux_armv7hf WEBRTC_BUILD=debug ./scripts/build
 ```
 
 but you'll typically just use `make`.
@@ -98,8 +79,8 @@ Building and packaging using:
 * [depot_tools](http://www.chromium.org/developers/how-tos/depottools) and
 * `scripts/`
 
-is done using a :neckbeard: `make` file and copied to `/opt/webrtc/Makefile` by `ansible`
-when provisioning. So e.g. to do everything:
+is done using a :neckbeard: `make` file. Its copied to `/opt/webrtc/Makefile` by `ansible`
+when provisioning so e.g. to do everything:
 
 ```bash
 $ make clean
