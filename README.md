@@ -1,4 +1,4 @@
-# webrtc-build [![Build Status](https://magnum.travis-ci.com/mayfieldrobotics/webrtc-build.svg?token=qHBoPmgQbWPVxfoYZkz1)](https://magnum.travis-ci.com/mayfieldrobotics/webrtc-build)
+# webrtc-build
 
 Automation for:
 
@@ -46,12 +46,12 @@ spawn a vm using `vagrant`:
 $ vagrant up
 ```
 
-and, **much** later once provisioning is done, start building out of `vagrant@/opt/webrtc`:
+and, **much** later once provisioning is done, start building out of `vagrant@~/webrtc`:
 
 ```bash
 $ cd ..
 $ vagrant ssh
-vagrant@vagrant-ubuntu-trusty-64$ cd /opt/webrtc
+vagrant@vagrant-ubuntu-trusty-64$
 ```
 
 ## scripts
@@ -61,12 +61,12 @@ Helpers for doing minor things the WebRTC build system doesn't are in
 
 * https://github.com/pristineio/webrtc-build-scripts
 
-They are dumped in `/opt/webrtc/scipts/` by `ansible` when provisioning, so if
+They are dumped in `~/webrtc/scipts/` by `ansible` when provisioning, so if
 e.g. you provisioned a `vagrant` vm you can do: 
 
 ```bash
 $ vagrant ssh
-vagrant@vagrant-ubuntu-trusty-64$ cd /opt/webrtc
+vagrant@vagrant-ubuntu-trusty-64$ cd ~/webrtc
 vagrant@vagrant-ubuntu-trusty-64$ WEBRTC_PROFILE=linux_armv7hf WEBRTC_BUILD=debug ./scripts/build
 ```
 
@@ -79,7 +79,7 @@ Building and packaging using:
 * [depot_tools](http://www.chromium.org/developers/how-tos/depottools) and
 * `scripts/`
 
-is done using a :neckbeard: `make` file. Its copied to `/opt/webrtc/Makefile` by `ansible`
+is done using a :neckbeard: `make` file. Its copied to `~/webrtc/Makefile` by `ansible`
 when provisioning so e.g. to do everything:
 
 ```bash

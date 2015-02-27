@@ -1,18 +1,21 @@
 ---
 - name: create depot_tools dir
-  file: path=/opt/depot_tools state=directory group={{ chromium_dev_group }} mode=0775
-  sudo: yes
+  file: path="{{ chromium_dev_root }}/depot_tools" state=directory mode=0775
 
 - name: clone depot_tools
   git:
     repo: https://chromium.googlesource.com/chromium/tools/depot_tools.git
-    dest: /opt/depot_tools
+    dest: "{{ chromium_dev_root }}/depot_tools"
 
-- name: set depot_tools profile
-  copy:
-    src: etc/profile.d/depot-tools.sh
-    dest: /etc/profile.d/depot-tools.sh
-    owner: root
-    group: root
+- name: copy depot_tools profile
+  template:
+    src: depot-tools.sh.j2
+    dest: "{{ chromium_dev_root }}/depot-tools.sh"
     mode: 0755
-  sudo: yes
+
+- name: source depot_tools
+  lineinfile: >
+    dest="~/.bashrc"
+    regexp="source .*/depot-tools\.sh"
+    line="source {{ chromium_dev_root }}/depot-tools.sh"
+    state=present

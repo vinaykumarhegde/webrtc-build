@@ -4,10 +4,8 @@
   vars:
     common_dev_users:
     - vagrant
-    chromium_dev_group: dev
-    webrtc_dev_group: dev
     webrtc_dev_gclient:
-      url: "https://chromium.googlesource.com/external/webrtc.git"
+      url: https://chromium.googlesource.com/external/webrtc.git
       custom_deps: {}
     webrtc_build_src: ../
   roles:

@@ -1,61 +1,61 @@
 ---
 - name: create build directory
-  file: path=/opt/webrtc state=directory group={{ webrtc_dev_group }} mode=0775
-  sudo: yes
+  file: path={{ webrtc_dev_root }}/webrtc state=directory mode=0775
   tags: [webrtc-dev]
 
 - name: fetching (can take HOURS!)
-  shell: source /etc/profile && fetch webrtc
+  shell: "source /etc/profile && source {{ chromium_dev_root }}/depot-tools.sh && fetch webrtc"
   args:
-    chdir: /opt/webrtc
+    chdir: "{{ webrtc_dev_root }}/webrtc"
     executable: /bin/bash
-    creates: /opt/webrtc/src
   register: fetch
+  failed_when: fetch.rc != 0 and 'You appear to already have a checkout.' not in fetch.stdout
   tags: [webrtc-dev]
 
 - name: create gclient conf
-  template: src=gclient.j2 dest=/opt/webrtc/.gclient mode=0644
+  template: src=gclient.j2 dest="{{ webrtc_dev_root }}/webrtc/.gclient" mode=0644
   tags: [webrtc-dev]
 
 - name: sync (can take HOURS!)
-  shell: source /etc/profile && gclient sync
+  shell: "source /etc/profile && source {{ chromium_dev_root }}/depot-tools.sh  && gclient sync"
   args:
-    chdir: /opt/webrtc
+    chdir: "{{ webrtc_dev_root }}/webrtc"
     executable: /bin/bash
-  when: fetch|changed
   tags: [webrtc-dev]
 
 - name: copy build/common.gypi sysroot patch
-  copy: src=webrtc_build_common_gypi_sysroot.patch dest=/opt/webrtc_build_common_gypi_sysroot.patch mode=0644
+  copy: >
+    src=webrtc_build_common_gypi_sysroot.patch
+    dest="{{ webrtc_dev_root }}/webrtc_build_common_gypi_sysroot.patch"
+    mode=0644
   tags: [webrtc-dev,patch]
-  sudo: yes
 
 - name: check build/common.gypi sysroot patch
-  command: git apply --check /opt/webrtc_build_common_gypi_sysroot.patch
+  command: git apply --check {{ webrtc_dev_root }}/webrtc_build_common_gypi_sysroot.patch
   args:
-    chdir: /opt/webrtc/src/build
+    chdir: "{{ webrtc_dev_root }}/webrtc/src/build"
   register: git_apply_check_sysroot_patch
   failed_when: git_apply_check_sysroot_patch.rc not in [0, 1]
   tags: [webrtc-dev,patch]
 
 - name: apply build/common.gypi sysroot patch
-  command: git apply /opt/webrtc_build_common_gypi_sysroot.patch
+  command: git apply {{ webrtc_dev_root }}/webrtc_build_common_gypi_sysroot.patch
   args:
-    chdir: /opt/webrtc/src/build
+    chdir: "{{ webrtc_dev_root }}/webrtc/src/build"
   when: git_apply_check_sysroot_patch.rc == 0
   tags: [webrtc-dev,patch]
 
 - name: syncing (can take HOURS!)
-  shell: source /etc/profile && gclient sync
+  shell: "source /etc/profile && source {{ chromium_dev_root }}/depot-tools.sh  && gclient sync"
   args:
-    chdir: /opt/webrtc
+    chdir: "{{ webrtc_dev_root }}/webrtc"
     executable: /bin/bash
   tags: [webrtc-dev]
 
 - name: install arm sysroot
-  shell: source /etc/profile && src/chromium/src/chrome/installer/linux/sysroot_scripts/install-debian.wheezy.sysroot.py --arch=arm
+  shell: "source /etc/profile && source {{ chromium_dev_root }}/depot-tools.sh  && src/chromium/src/chrome/installer/linux/sysroot_scripts/install-debian.wheezy.sysroot.py --arch=arm"
   args:
-    chdir: /opt/webrtc
+    chdir: "{{ webrtc_dev_root }}/webrtc"
     executable: /bin/bash
-    creates: /opt/webrtc/src/chromium/src/chrome/installer/linux/debian_wheezy_arm-sysroot
+    creates: "{{ webrtc_dev_root }}/webrtc/src/chromium/src/chrome/installer/linux/debian_wheezy_arm-sysroot"
   tags: [webrtc-dev, sysroot]

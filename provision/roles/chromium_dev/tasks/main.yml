@@ -3,22 +3,18 @@
   tags: [chromium-dev, depot_tools]
   
 - name: download chromium install build deps script
-  get_url:
-    url: https://src.chromium.org/svn/trunk/src/build/install-build-deps.sh
-    dest: /opt/chromium-install-build-deps.sh
-    mode: 0755
+  get_url: >
+    url=https://src.chromium.org/svn/trunk/src/build/install-build-deps.sh
+    dest="{{ chromium_dev_root }}/chromium-install-build-deps.sh"
+    mode=0755
   tags: [chromium-dev, deps]
-  sudo: yes
 
 - name: copy expect for chromium install build deps script
-  copy:
-    src: opt/chromium-install-build-deps.expect
-    dest: /opt/chromium-install-build-deps.expect
-    owner: root
-    group: root
-    mode: 0755
+  template: >
+    src=chromium-install-build-deps.expect.j2
+    dest="{{ chromium_dev_root }}/chromium-install-build-deps.expect"
+    mode=0755
   tags: [chromium-dev, deps]
-  sudo: yes
 
 - name: accept ttf-mscorefonts-installer eula
   debconf:
@@ -37,6 +33,5 @@
   sudo: yes
 
 - name: install chromium build deps
-  command: /opt/chromium-install-build-deps.expect
+  command: "{{ chromium_dev_root }}/chromium-install-build-deps.expect"
   tags: [chromium-dev, deps]
-  sudo: yes

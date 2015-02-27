@@ -1,6 +1,6 @@
 #!/usr/bin/env expect
 set timeout -1
-spawn /opt/chromium-install-build-deps.sh
+spawn {{ chromium_dev_root }}/chromium-install-build-deps.sh
 expect "Do you want me to install them for you (y/N)"
 send "y\n"
 expect eof

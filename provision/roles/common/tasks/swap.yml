@@ -10,10 +10,12 @@
 
 - name: fstab swap
   action: lineinfile dest=/etc/fstab regexp="/swap" line="/swap none swap sw 0 0" state=present
+  when: ansible_swaptotal_mb < 1
   sudo: yes
 
 - name: turn on swap
   command: swapon -a
+  when: ansible_swaptotal_mb < 1
   sudo: yes
 
 - name: enable swapiness

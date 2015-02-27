@@ -6,7 +6,7 @@ DST=$(shell pwd)/build
 ROOT=$(shell pwd)
 SCRIPTS=$(ROOT)/scripts
 HEADERS=$(shell cat $(SCRIPTS)/libjingle.headers)
-GIT_REVISION?=b024da31225ef47470f09798dd745ab99840bb95
+GIT_REVISION?=13ca5f6db2db66e34907141f151dac780ae2411d
 PKGCONFIG_VERSION?=1.0.0
 DEB_VERSION?:="1$($(shell cd ${SRC_ROOT} && git rev-parse --short HEAD))"
 DEB_REVISION?=1
@@ -82,7 +82,7 @@ $(LINUX_x86_64_DEBUG_DST)/root/usr/lib/pkgconfig/libjingle.pc: $(LINUX_x86_64_DE
 	mkdir -p $(dir $@)
 	$(SCRIPTS)/libjingle pkg-config $(LINUX_x86_64_DEBUG_SRC) $(PKGCONFIG_VERSION) > $@
 
-$(addprefix $(LINUX_x86_64_DEBUG_DST)/root/usr/include/jingle, $(HEADERS)):
+$(addprefix $(LINUX_x86_64_DEBUG_DST)/root/usr/include/jingle, $(HEADERS)): $(LINUX_x86_64_DEBUG_SRC)/libjingle.a
 	mkdir -p $(dir $@)
 	cp $(subst $(LINUX_x86_64_DEBUG_DST)/root/usr/include/jingle, $(SRC_ROOT), $@) $@
 
@@ -113,7 +113,7 @@ $(LINUX_x86_64_RELEASE_DST)/root/usr/lib/pkgconfig/libjingle.pc: $(LINUX_x86_64_
 	mkdir -p $(dir $@)
 	$(SCRIPTS)/libjingle pkg-config $(LINUX_x86_64_RELEASE_SRC) $(PKGCONFIG_VERSION) > $@
 
-$(addprefix $(LINUX_x86_64_RELEASE_DST)/root/usr/include/jingle, $(HEADERS)):
+$(addprefix $(LINUX_x86_64_RELEASE_DST)/root/usr/include/jingle, $(HEADERS)): $(LINUX_x86_64_RELEASE_SRC)/libjingle.a
 	mkdir -p $(dir $@)
 	cp $(subst $(LINUX_x86_64_RELEASE_DST)/root/usr/include/jingle, $(SRC_ROOT), $@) $@
 
@@ -144,7 +144,7 @@ $(LINUX_ARMHF_DEBUG_DST)/root/usr/lib/pkgconfig/libjingle.pc: $(LINUX_ARMHF_DEBU
 	mkdir -p $(dir $@)
 	$(SCRIPTS)/libjingle pkg-config $(LINUX_ARMHF_DEBUG_SRC) $(PKGCONFIG_VERSION) > $@
 
-$(addprefix $(LINUX_ARMHF_DEBUG_DST)/root/usr/include/jingle, $(HEADERS)):
+$(addprefix $(LINUX_ARMHF_DEBUG_DST)/root/usr/include/jingle, $(HEADERS)): $(LINUX_ARMHF_DEBUG_SRC)/libjingle.a $(LINUX_ARMHF_DEBUG_SRC)/obj/talk/libjingle_peerconnection_so.ninja
 	mkdir -p $(dir $@)
 	cp $(subst $(LINUX_ARMHF_DEBUG_DST)/root/usr/include/jingle, $(SRC_ROOT), $@) $@
 
@@ -175,7 +175,7 @@ $(LINUX_ARMHF_RELEASE_DST)/root/usr/lib/pkgconfig/libjingle.pc: $(LINUX_ARMHF_RE
 	mkdir -p $(dir $@)
 	$(SCRIPTS)/libjingle pkg-config $(LINUX_ARMHF_RELEASE_SRC) $(PKGCONFIG_VERSION) > $@
 
-$(addprefix $(LINUX_ARMHF_RELEASE_DST)/root/usr/include/jingle, $(HEADERS)):
+$(addprefix $(LINUX_ARMHF_RELEASE_DST)/root/usr/include/jingle, $(HEADERS)): $(LINUX_ARMHF_RELEASE_SRC)/libjingle.a $(LINUX_ARMHF_RELEASE_SRC)/obj/talk/libjingle_peerconnection_so.ninja
 	mkdir -p $(dir $@)
 	cp $(subst $(LINUX_ARMHF_RELEASE_DST)/root/usr/include/jingle, $(SRC_ROOT), $@) $@
 
@@ -198,7 +198,7 @@ $(ANDROID_ARMV7_DEBUG_DST)/libjingle_peerconnection.jar: $(ANDROID_ARMV7_DEBUG_S
 
 android_armv7_debug: $(ANDROID_ARMV7_DEBUG_DST)/libjingle_peerconnection.jar
 
-$(ANDROID_ARMV7_RELEASE_SRC)/libjingle_peerconnection.jar: $(ANDROID_ARMV7_RELEASE_SRC)/libjingle_peerconnection.jar
+$(ANDROID_ARMV7_RELEASE_SRC)/libjingle_peerconnection.jar:
 	WEBRTC_PROFILE=android_armv7 WEBRTC_BUILD=Release $(SCRIPTS)/build -r $(GIT_REVISION)
 
 $(ANDROID_ARMV7_RELEASE_DST)/libjingle_peerconnection.jar: $(ANDROID_ARMV7_RELEASE_SRC)/libjingle_peerconnection.jar

@@ -89,7 +89,7 @@ function build() {
     
     echo "running gclient sync in '${WEBRTC_ROOT}' w/ revision ${REVISION}"
     cd "${WEBRTC_ROOT}"
-    if [ -z "$REVISION" ]; then
+    if [ ! -z "$REVISION" ]; then
         gclient sync --revision="${REVISION}"
     else
         gclient sync
