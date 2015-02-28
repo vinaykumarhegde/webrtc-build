@@ -10,3 +10,6 @@
   
 - include: users.yml
   tags: [common, users]
+  
+- include: git.yml
+  tags: [common, git]

@@ -1,0 +1,6 @@
+---
+- name: set git user email
+  command: git config --global user.email {{ ansible_user_id }}@{{ ansible_hostname }}
+
+- name: set git user name
+  command: git config --global user.name {{ ansible_user_id }}

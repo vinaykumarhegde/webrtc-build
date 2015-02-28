@@ -44,6 +44,13 @@
     chdir: "{{ webrtc_dev_root }}/webrtc/src/build"
   when: git_apply_check_sysroot_patch.rc == 0
   tags: [webrtc-dev,patch]
+  
+- name: commit build/common.gypi sysroot patch
+  shell: git commit add common.gypi && git commit -m "fix broken sysroot path"
+  args:
+    chdir: "{{ webrtc_dev_root }}/webrtc/src/build"
+  when: git_apply_check_sysroot_patch.rc == 0
+  tags: [webrtc-dev,patch]
 
 - name: syncing (can take HOURS!)
   shell: "source /etc/profile && source {{ chromium_dev_root }}/depot-tools.sh  && gclient sync"
