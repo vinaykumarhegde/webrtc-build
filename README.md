@@ -49,9 +49,9 @@ $ vagrant up
 and, **much** later once provisioning is done, start building out of `vagrant@~/webrtc`:
 
 ```bash
-$ cd ..
 $ vagrant ssh
-vagrant@vagrant-ubuntu-trusty-64$
+vagrant@vagrant-ubuntu-trusty-64$ cd webrtc
+vagrant@vagrant-ubuntu-trusty-64$ make linux_x86_64_debug
 ```
 
 ## scripts
