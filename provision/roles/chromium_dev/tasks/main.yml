@@ -25,12 +25,8 @@
   tags: [chromium-dev, deps]
   sudo: yes
 
-- name: install chromium build deps
-  apt: name={{ item }} state=present
-  with_items:
-  - g++-4.8-multilib-arm-linux-gnueabihf
-  tags: [chromium-dev]
-  sudo: yes
+- include: dependencies.yml
+  tags: [chromium-dev, deps]
 
 - name: install chromium build deps
   command: "{{ chromium_dev_root }}/chromium-install-build-deps.expect"

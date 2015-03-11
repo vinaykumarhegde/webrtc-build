@@ -1,0 +1,40 @@
+---
+- name: install build dependencies
+  apt: name={{ item }} state=present
+  with_items:
+  - g++-4.8-multilib-arm-linux-gnueabihf
+  when: "{{ ansible_distribution_version | version_compare('13.0', '>=') }}"
+  sudo: yes
+  
+- name: add ubuntu toolchain ppa
+  apt_repository: repo="ppa:ubuntu-toolchain-r/test"
+  when: "{{ ansible_distribution_version | version_compare('13.0', '<') }}"
+  register: ubuntu_toolchain_ppa
+  sudo: yes
+  
+- name: update apt cache
+  apt: update_cache=yes
+  tags: [apt]
+  when: ubuntu_toolchain_ppa|changed
+  sudo: yes
+
+- name: add linaro toolchain ppa
+  apt_repository: repo="ppa:linaro-maintainers/toolchain"
+  when: "{{ ansible_distribution_version | version_compare('13.0', '<') }}"
+  register: linaro_toolchain_ppa
+  tags: [apt]
+  sudo: yes
+
+- name: update apt cache
+  apt: update_cache=yes
+  tags: [apt]
+  when: linaro_toolchain_ppa|changed
+  sudo: yes
+
+- name: install build dependencies
+  apt: name={{ item }} state=present
+  with_items:
+  - g++-4.8-multilib
+  - g++-arm-linux-gnueabi
+  when: "{{ ansible_distribution_version | version_compare('13.0', '<') }}"
+  sudo: yes
