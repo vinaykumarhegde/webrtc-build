@@ -95,7 +95,6 @@
 /talk/media/base/rtpdump.h
 /talk/media/base/videoengine_unittest.h
 /talk/media/base/videorenderer.h
-/talk/media/base/nullvideorenderer.h
 /talk/media/base/videocapturer.h
 /talk/media/base/mediachannel.h
 /talk/media/base/hybriddataengine.h
@@ -136,10 +135,8 @@
 /talk/media/webrtc/fakewebrtcvcmfactory.h
 /talk/media/webrtc/webrtcvideoframe.h
 /talk/media/webrtc/webrtcpassthroughrender.h
-/talk/media/webrtc/webrtcvideoengine2_unittest.h
 /talk/media/webrtc/webrtcvideoframefactory.h
 /talk/media/webrtc/webrtcexport.h
-/talk/media/webrtc/webrtctexturevideoframe.h
 /talk/media/webrtc/webrtcmediaengine.h
 /talk/media/webrtc/fakewebrtcvoiceengine.h
 /talk/media/webrtc/fakewebrtcvideoengine.h
@@ -179,21 +176,16 @@
 /webrtc/p2p/base/stun.h
 /webrtc/p2p/base/transportinfo.h
 /webrtc/p2p/base/transportchannelimpl.h
-/webrtc/p2p/base/portallocatorsessionproxy.h
 /webrtc/p2p/base/transportdescription.h
 /webrtc/p2p/base/dtlstransportchannel.h
 /webrtc/p2p/base/port.h
 /webrtc/p2p/base/transportdescriptionfactory.h
 /webrtc/p2p/base/p2ptransportchannel.h
-/webrtc/p2p/base/testturnserver.h
 /webrtc/p2p/base/transportchannelproxy.h
-/webrtc/p2p/base/portproxy.h
 /webrtc/p2p/base/portallocator.h
 /webrtc/p2p/base/relayport.h
-/webrtc/p2p/base/teststunserver.h
 /webrtc/p2p/base/stunport.h
 /webrtc/p2p/base/sessionid.h
-/webrtc/p2p/base/testrelayserver.h
 /webrtc/p2p/base/transportchannel.h
 /webrtc/p2p/base/turnport.h
 /webrtc/p2p/base/portinterface.h
@@ -237,7 +229,6 @@
 /webrtc/common_audio/vad/vad_core.h
 /webrtc/common_audio/vad/include/webrtc_vad.h
 /webrtc/common_audio/vad/include/vad.h
-/webrtc/common_audio/vad/vad_unittest.h
 /webrtc/common_audio/signal_processing/complex_fft_tables.h
 /webrtc/common_audio/signal_processing/include/spl_inl_mips.h
 /webrtc/common_audio/signal_processing/include/signal_processing_library.h
@@ -258,7 +249,7 @@
 /webrtc/common_audio/audio_converter.h
 /webrtc/common_video/plane.h
 /webrtc/common_video/rotation.h
-/webrtc/common_video/interface/i420_video_frame.h
+/webrtc/common_video/interface/video_frame_buffer.h
 /webrtc/common_video/libyuv/include/scaler.h
 /webrtc/common_video/libyuv/include/webrtc_libyuv.h
 /webrtc/engine_configurations.h
@@ -285,9 +276,6 @@
 /webrtc/voice_engine/include/voe_external_media.h
 /webrtc/voice_engine/include/voe_volume_control.h
 /webrtc/voice_engine/include/voe_errors.h
-/webrtc/voice_engine/include/mock/mock_voe_volume_control.h
-/webrtc/voice_engine/include/mock/fake_voe_external_media.h
-/webrtc/voice_engine/include/mock/mock_voe_observer.h
 /webrtc/voice_engine/include/voe_network.h
 /webrtc/voice_engine/include/voe_codec.h
 /webrtc/voice_engine/include/voe_video_sync.h
@@ -305,14 +293,12 @@
 /webrtc/voice_engine/output_mixer.h
 /webrtc/voice_engine/voe_neteq_stats_impl.h
 /webrtc/call.h
-/webrtc/video/rampup_tests.h
 /webrtc/video/send_statistics_proxy.h
 /webrtc/video/receive_statistics_proxy.h
 /webrtc/video/video_receive_stream.h
 /webrtc/video/transport_adapter.h
 /webrtc/video/encoded_frame_callback_adapter.h
 /webrtc/video/video_send_stream.h
-/webrtc/tools/loopback_test/loopback_test.html
 /webrtc/tools/rtcbot/rtcBotReportVisualizer/index.html
 /webrtc/tools/rtcbot/bot/browser/index.html
 /webrtc/tools/frame_analyzer/video_quality_analysis.h
@@ -346,14 +332,12 @@
 /webrtc/base/urlencode.h
 /webrtc/base/linux.h
 /webrtc/base/transformadapter.h
-/webrtc/base/sigslottester.h.pump
 /webrtc/base/asynctcpsocket.h
 /webrtc/base/json.h
 /webrtc/base/ifaddrs-android.h
 /webrtc/base/bytebuffer.h
 /webrtc/base/systeminfo.h
 /webrtc/base/macconversion.h
-/webrtc/base/testclient.h
 /webrtc/base/exp_filter.h
 /webrtc/base/fakenetwork.h
 /webrtc/base/asyncresolverinterface.h
@@ -375,7 +359,6 @@
 /webrtc/base/messagequeue.h
 /webrtc/base/asyncudpsocket.h
 /webrtc/base/firewallsocketserver.h
-/webrtc/base/socket_unittest.h
 /webrtc/base/httprequest.h
 /webrtc/base/stringutils.h
 /webrtc/base/sharedexclusivelock.h
@@ -401,8 +384,6 @@
 /webrtc/base/winfirewall.h
 /webrtc/base/openssldigest.h
 /webrtc/base/callback.h.pump
-/webrtc/base/testutils.h
-/webrtc/base/testechoserver.h
 /webrtc/base/fakecpumonitor.h
 /webrtc/base/schanneladapter.h
 /webrtc/base/timing.h
@@ -439,7 +420,6 @@
 /webrtc/base/asyncinvoker-inl.h
 /webrtc/base/profiler.h
 /webrtc/base/ipaddress.h
-/webrtc/base/stringdigest.h
 /webrtc/base/libdbusglibsymboltable.h
 /webrtc/base/x11windowpicker.h
 /webrtc/base/task.h
@@ -463,7 +443,6 @@
 /webrtc/base/sslfingerprint.h
 /webrtc/base/macsocketserver.h
 /webrtc/base/atomicops.h
-/webrtc/base/testbase64.h
 /webrtc/base/httpclient.h
 /webrtc/base/bind.h.pump
 /webrtc/base/logging.h
@@ -592,10 +571,8 @@
 /webrtc/libjingle/session/sessionclient.h
 /webrtc/libjingle/session/sessionmessages.h
 /webrtc/frame_callback.h
-/webrtc/system_wrappers/source/event_posix.h
 /webrtc/system_wrappers/source/file_impl.h
 /webrtc/system_wrappers/source/data_log_c_helpers_unittest.h
-/webrtc/system_wrappers/source/event_win.h
 /webrtc/system_wrappers/source/trace_impl.h
 /webrtc/system_wrappers/source/condition_variable_native_win.h
 /webrtc/system_wrappers/source/critical_section_win.h
@@ -608,7 +585,6 @@
 /webrtc/system_wrappers/source/thread_win.h
 /webrtc/system_wrappers/source/condition_variable_event_win.h
 /webrtc/system_wrappers/interface/logcat_trace_context.h
-/webrtc/system_wrappers/interface/scoped_ptr.h
 /webrtc/system_wrappers/interface/data_log_impl.h
 /webrtc/system_wrappers/interface/field_trial.h
 /webrtc/system_wrappers/interface/data_log.h
@@ -688,12 +664,9 @@
 /webrtc/video_engine/vie_encoder.h
 /webrtc/modules/utility/source/file_recorder_impl.h
 /webrtc/modules/utility/source/coder.h
-/webrtc/modules/utility/source/video_coder.h
 /webrtc/modules/utility/source/process_thread_impl.h
-/webrtc/modules/utility/source/frame_scaler.h
 /webrtc/modules/utility/source/file_player_impl.h
 /webrtc/modules/utility/source/rtp_dump_impl.h
-/webrtc/modules/utility/source/video_frames_queue.h
 /webrtc/modules/utility/interface/rtp_dump.h
 /webrtc/modules/utility/interface/file_player.h
 /webrtc/modules/utility/interface/audio_frame_operations.h
@@ -713,7 +686,6 @@
 /webrtc/modules/video_processing/main/source/spatial_resampler.h
 /webrtc/modules/video_processing/main/interface/video_processing_defines.h
 /webrtc/modules/video_processing/main/interface/video_processing.h
-/webrtc/modules/video_coding/utility/quality_scaler.h
 /webrtc/modules/video_coding/utility/include/frame_dropper.h
 /webrtc/modules/video_coding/utility/include/mock/mock_frame_dropper.h
 /webrtc/modules/video_coding/main/source/qm_select_data.h
@@ -723,7 +695,6 @@
 /webrtc/modules/video_coding/main/source/fec_tables_xor.h
 /webrtc/modules/video_coding/main/source/generic_encoder.h
 /webrtc/modules/video_coding/main/source/generic_decoder.h
-/webrtc/modules/video_coding/main/source/er_tables_xor.h
 /webrtc/modules/video_coding/main/source/frame_buffer.h
 /webrtc/modules/video_coding/main/source/video_coding_impl.h
 /webrtc/modules/video_coding/main/source/internal_defines.h
@@ -762,7 +733,6 @@
 /webrtc/modules/video_coding/codecs/vp8/temporal_layers.h
 /webrtc/modules/video_coding/codecs/vp8/vp8_factory.h
 /webrtc/modules/video_coding/codecs/vp8/simulcast_unittest.h
-/webrtc/modules/audio_processing/utility/fft4g.h
 /webrtc/modules/audio_processing/utility/delay_estimator_internal.h
 /webrtc/modules/audio_processing/utility/delay_estimator_wrapper.h
 /webrtc/modules/audio_processing/utility/delay_estimator.h
@@ -1089,7 +1059,6 @@
 /webrtc/modules/audio_device/mac/portaudio/pa_ringbuffer.h
 /webrtc/modules/interface/module_common_types.h
 /webrtc/modules/interface/module.h
-/webrtc/modules/bitrate_controller/remb_suppressor.h
 /webrtc/modules/bitrate_controller/send_side_bandwidth_estimation.h
 /webrtc/modules/bitrate_controller/include/bitrate_controller.h
 /webrtc/modules/bitrate_controller/bitrate_controller_impl.h
@@ -1112,7 +1081,6 @@
 /webrtc/modules/remote_bitrate_estimator/inter_arrival.h
 /webrtc/modules/media_file/source/media_file_impl.h
 /webrtc/modules/media_file/source/media_file_utility.h
-/webrtc/modules/media_file/source/avi_file.h
 /webrtc/modules/media_file/interface/media_file.h
 /webrtc/modules/media_file/interface/media_file_defines.h
 /webrtc/modules/desktop_capture/desktop_frame_win.h
