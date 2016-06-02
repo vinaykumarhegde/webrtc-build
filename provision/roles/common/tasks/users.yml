@@ -1,4 +1,5 @@
 ---
+
 - name: bashrc
   copy:
     src: etc/profile.d/bashrc.sh
@@ -6,7 +7,7 @@
     owner: root
     group: root
     mode: 0755
-  sudo: yes
+  become: yes
 
 - name: bash aliases
   copy:
@@ -15,11 +16,13 @@
     owner: root
     group: root
     mode: 0755
-  sudo: yes
+  become: yes
 
-- group: name=dev state=present
-  sudo: yes
+- name: create dev group
+  group: name={{ common_dev_group }} state=present
+  become: yes
 
-- user: name={{ item }} groups=dev append=yes
-  with_items: common_dev_users
-  sudo: yes
+- name: add users to dev group
+  user: name={{ item }} groups={{ common_dev_group }} append=yes
+  with_items: "{{ common_dev_users }}"
+  become: yes

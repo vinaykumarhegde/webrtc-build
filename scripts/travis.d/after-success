@@ -1,0 +1,63 @@
+#!/bin/bash
+#
+# Publishes debians build by script to S3 backed apt repo if:
+#
+#   1. this is *not* a pull request (i.e. $TRAVIS_PULL_REQUEST == false)
+#   2. this is a tag (i.e. $TRAVIS_TAG defined)
+#
+# otherwise does nothing. These env vars *must* be defined:
+#
+#   - APT_S3_BUCKET
+#   - SECRETS_S3_BUCKET
+#   - AWS_ACCESS_KEY_ID
+#   - AWS_SECRET_ACCESS_KEY
+#
+# and optionally these:
+#
+#   - APT_S3_ENDPOINT
+#   - APT_CODENAME
+#   - APT_COMPONENT
+#   - APT_VISIBILITY
+#
+
+set -e
+set -u
+#set -x
+
+APT_S3_ENDPOINT=${APT_S3_ENDPOINT:-"s3.amazonaws.com"}
+APT_CODENAME=${APT_CODENAME:-"trusty"}
+APT_COMPONENT=${APT_COMPONENT:-"unstable"}
+APT_VISIBILITY=${APT_VISIBILITY:-"public"}
+
+if ! [ "$TRAVIS_PULL_REQUEST" == "false" ] || [ -z "$TRAVIS_TAG" ]; then
+    exit 0
+fi
+
+function delete_gpg() {
+    if [ -f private.gpg ]; then
+        rm private.gpg
+    fi
+    if [ -f private.gpg ]; then
+        rm private.gpg
+    fi
+}
+
+trap delete_gpg INT TERM EXIT
+
+aws s3 cp s3://${SECRETS_S3_BUCKET}/${APT_S3_BUCKET}/public.gpg public.gpg
+APT_GPG_KEY_ID=$(gpg --with-colons public.gpg | awk -F: '/^pub:/ { print $5 }')
+gpg --import public.gpg
+
+aws s3 cp s3://${SECRETS_S3_BUCKET}/${APT_S3_BUCKET}/private.gpg private.gpg
+gpg --allow-secret-key-import --import private.gpg
+
+deb-s3 upload \
+-b $APT_S3_BUCKET \
+-c $APT_CODENAME \
+-m $APT_COMPONENT \
+-v $APT_VISIBILITY \
+--sign $APT_GPG_KEY_ID \
+--endpoint=$APT_S3_ENDPOINT \
+--access-key-id=$AWS_ACCESS_KEY_ID \
+--secret-access-key=$AWS_SECRET_ACCESS_KEY \
+libjingle*.deb

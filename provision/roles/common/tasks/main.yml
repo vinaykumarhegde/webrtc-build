@@ -3,6 +3,7 @@
   tags: [common, network]
 
 - include: swap.yml
+  when: ansible_memtotal_mb < 2048
   tags: [common, swap]
 
 - include: dependencies.yml

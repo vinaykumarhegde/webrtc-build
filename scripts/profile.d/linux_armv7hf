@@ -1,5 +1,4 @@
-#!/bin/bash
-WEBRTC_TARGET="libjingle_peerconnection_so"
+WEBRTC_TARGET="libjingle_so"
 
 GYP_DEFINES="\
 OS=linux \
@@ -7,7 +6,6 @@ host_os=linux \
 build_with_libjingle=1 \
 build_with_chromium=0 \
 clang=1 \
-enable_tracing=1 \
 disable_iterator_debugging=1 \
 disable_glibcxx_debug=1 \
 target_arch=arm \
@@ -16,6 +14,16 @@ arm_float_abi=hard \
 arm_neon=1 \
 arm_thumb=0 \
 use_rtti=1 \
+linux_fpic=1 \
 "
+if [ "${WEBRTC_BUILD_TYPE}" == "Debug" ]; then
+    GYP_DEFINES=$GYP_DEFINES" \
+enable_tracing=1 \
+"
+fi
 
 GYP_CROSSCOMPILE=1
+
+DEB_ARCH=armhf
+
+TOOLCHAIN=/usr/arm-linux-gnueabihf

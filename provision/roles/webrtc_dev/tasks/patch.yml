@@ -1,0 +1,54 @@
+---
+
+# build/common.gypi
+
+- name: copy build/common.gypi sysroot patch
+  copy: >
+    src=webrtc_build_common_gypi_sysroot.patch
+    dest="{{ webrtc_dev_root }}/webrtc/webrtc_build_common_gypi_sysroot.patch"
+    mode=0664
+
+- name: check build/common.gypi sysroot patch
+  command: git apply --check {{ webrtc_dev_root }}/webrtc/webrtc_build_common_gypi_sysroot.patch
+  args:
+    chdir: "{{ webrtc_dev_root }}/webrtc/src/build"
+  register: git_apply_check_sysroot_patch
+  failed_when: git_apply_check_sysroot_patch.rc not in [0, 1]
+- name: apply build/common.gypi sysroot patch
+  command: git apply {{ webrtc_dev_root }}/webrtc/webrtc_build_common_gypi_sysroot.patch
+  args:
+    chdir: "{{ webrtc_dev_root }}/webrtc/src"
+  when: git_apply_check_sysroot_patch.rc == 0
+  
+- name: commit build/common.gypi sysroot patch
+  shell: git add common.gypi && git commit -m "fix broken sysroot path"
+  args:
+    chdir: "{{ webrtc_dev_root }}/webrtc/src/build"
+  when: git_apply_check_sysroot_patch.rc == 0
+
+# talk/libjingle.gyp
+
+- name: copy talk/libjingle.gyp patch
+  copy: >
+    src=webrtc_talk_libjingle_gyp_targets.patch
+    dest="{{ webrtc_dev_root }}/webrtc/webrtc_talk_libjingle_gyp_targets.patch"
+    mode=0664
+
+- name: check talk/libjingle.gyp patch
+  command: git apply --check {{ webrtc_dev_root }}/webrtc/webrtc_talk_libjingle_gyp_targets.patch
+  args:
+    chdir: "{{ webrtc_dev_root }}/webrtc/src"
+  register: git_apply_check_libjingle_targets_patch
+  failed_when: git_apply_check_libjingle_targets_patch.rc not in [0, 1]
+
+- name: apply talk/libjingle.gyp patch
+  command: git apply {{ webrtc_dev_root }}/webrtc/webrtc_talk_libjingle_gyp_targets.patch
+  args:
+    chdir: "{{ webrtc_dev_root }}/webrtc/src"
+  when: git_apply_check_libjingle_targets_patch.rc == 0
+  
+- name: commit talk/libjingle.gyp sysroot patch
+  shell: git add libjingle.gyp && git commit -m "add libjingle targets"
+  args:
+    chdir: "{{ webrtc_dev_root }}/webrtc/src/talk"
+  when: git_apply_check_libjingle_targets_patch.rc == 0

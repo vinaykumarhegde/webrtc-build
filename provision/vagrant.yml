@@ -1,0 +1,8 @@
+---
+
+- hosts: all
+  roles:
+  - common
+  - chromium_dev
+  - webrtc_dev
+  - webrtc_build

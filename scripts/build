@@ -1,14 +1,15 @@
 #!/bin/bash
 #
-# Utility WebRTC build scripts, which based on these:
+# WebRTC build scripts, which based on these:
 #
-#   WEBRTC_PROFILE=${WEBRTC_PROFILE:-"x64"}
-#   WEBRTC_BUILD=${WEBRTC_BUILD:-"debug"}
-#   WEBRTC_SRC=${WEBRTC_SRC:-"src"}
-#   WEBRTC_ROOT=${WEBRTC_ROOT:-`pwd`}
+#   WEBRTC_PROFILE=${WEBRTC_PROFILE:-"linux_x86_64"}
+#   WEBRTC_BUILD_TYPE=${WEBRTC_BUILD_TYPE:-"Debug"}
+#   WEBRTC_SRC_DIR=${WEBRTC_SRC_DIR:-"src"}
 #   WEBRTC_OUT=${WEBRTC_OUT:-"out/${WEBRTC_PROFILE}"}
+#   WEBRTC_REV=${WEBRTC_REV:-"`cd ${WEBRTC_SRC_DIR} && git rev-parse --short HEAD`"}
+#   LIBJINGLE_VER=${LIBJINGLE_VER:-"${WEBRTC_REV}"}
 #
-# sets GYP build environment variables:
+# sources profile.d/${WEBRTC_PROFILE} then sets:
 #
 #   GYP_DEFINES=
 #   GYP_GENERATORS=
@@ -16,21 +17,37 @@
 #   GYP_CROSSCOMPILE=
 #   GYP_INCLUDE_LAST=
 #
-# and then does ~:
+# and finally does ~:
 #
 #   $ cd $WEBRTC_ROOT
 #   $ gclient sync
-#   $ cd $WEBRTC_SRC
+#   $ cd $WEBRTC_SRC_DIR
 #   $ ninja -C $WEBRTC_OUT $WEBRTC_TARGET
 #
 # Its based on: https://github.com/pristineio/webrtc-build-scripts.
 #
 
+SCRIPT_DIR=$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)  # http://stackoverflow.com/a/246128
+DIR=$(readlink -f ${SCRIPT_DIR}/../)
+PROFILES="${SCRIPT_DIR}/profile.d"
+DRY=0
+VERBOSE=0
+
 WEBRTC_PROFILE=${WEBRTC_PROFILE:-"linux_x86_64"}
-WEBRTC_BUILD=${WEBRTC_BUILD:-"debug"}
-WEBRTC_SRC=${WEBRTC_SRC:-"src"}
-WEBRTC_ROOT=${WEBRTC_ROOT:-`pwd`}
+WEBRTC_BUILD_TYPE=${WEBRTC_BUILD_TYPE:-"Debug"}
+WEBRTC_SRC_DIR=${WEBRTC_SRC_DIR:-"${DIR}/src"}
 WEBRTC_OUT=${WEBRTC_OUT:-"out/${WEBRTC_PROFILE}"}
+WEBRTC_REV=${WEBRTC_REV:-"$(cd ${WEBRTC_SRC_DIR} && git rev-parse --short HEAD)"}
+
+LIBJINGLE_VER=${LIBJINGLE_VER:-"${WEBRTC_REV}"}
+case "$WEBRTC_BUILD_TYPE" in
+Debug)
+    LIBJINGLE_TAG="-d"
+    ;;
+*)
+    LIBJINGLE_TAG=""
+    ;;
+esac
 
 USAGE="\
 [WEBRTC_{option}={value}]* $0 [-d|--dry] [-h|--help] [-r|--revision={webrtc-commit-hash}]
@@ -38,20 +55,14 @@ USAGE="\
 where WEBRTC_{option} is one of:
 
 WEBRTC_PROFILE= Profile name or file to be sourced, defaults to linux_x86_64.
-WEBRTC_BUILD= Built type, defaults to debug.
-WEBRTC_ROOT= Directory containing WebRTC source, defaults to '`pwd`'.
-WEBRTC_SRC= Name of WebRTC source directory in \${WEBRTC_ROOT}, defaults to src. 
-WEBRTC_OUT= Output directory in \$WEBRTC_ROOT/\$WEBRTC_SRC/out, \${WEBRTC_PROFILE}. 
+WEBRTC_BUILD_TYPE= Built type, defaults to Debug.
+WEBRTC_SRC_DIR= Path of WebRTC source directory, defaults to `pwd`/../src.
+WEBRTC_OUT= Output directory in \$WEBRTC_SRC_DIR/out, defaults to \${WEBRTC_PROFILE}.
 
 e.g.
 
-\$ WEBRTC_PROFILE=linux_armv7hf WEBRTC_BUILD=debug $0
+\$ WEBRTC_PROFILE=linux_armv7hf WEBRTC_BUILD_TYPE=Debug $0
 "
-
-SCRIPTS=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )  # http://stackoverflow.com/a/246128
-PROFILES="${SCRIPTS}/profile.d"
-DRY=0
-REVISION=
 
 # profile
 
@@ -59,8 +70,10 @@ GYP_DEFINES=
 GYP_GENERATORS=ninja
 GYP_GENERATOR_FLAGS="output_dir=${WEBRTC_OUT}"
 GYP_CROSSCOMPILE=0
-GYP_INCLUDE_LAST="${SCRIPTS}/custom.gypi"
+GYP_INCLUDE_LAST="${SCRIPT_DIR}/custom.gypi"
 WEBRTC_TARGET=
+DEB_ARCH=
+TOOLCHAIN=
 
 # build
 
@@ -78,6 +91,9 @@ function buildenv() {
     source "${profile}"
     
     GYP_DEFINES=`echo $GYP_DEFINES | sed -e 's/^ *//' -e 's/ *$//'`
+    GYP_DEFINES=$GYP_DEFINES" \
+debug_compilation_dir=/usr/src/libjingle${LIBJINGLE_VER}/out/${WEBRTC_PROFILE}/${WEBRTC_BUILD_TYPE} \
+libjingle_so_name=jingle${LIBJINGLE_VER}${LIBJINGLE_TAG}"
     GYP_GENERATORS=`echo $GYP_GENERATORS | sed -e 's/^ *//' -e 's/ *$//'`
     GYP_GENERATOR_FLAGS=`echo $GYP_GENERATOR_FLAGS | sed -e 's/^ *//' -e 's/ *$//'`
     GYP_CROSSCOMPILE=`echo $GYP_CROSSCOMPILE | sed -e 's/^ *//' -e 's/ *$//'`
@@ -85,45 +101,65 @@ function buildenv() {
 
 function build() {
     local working_dir=`pwd`
-    local build_dir="${WEBRTC_ROOT}/${WEBRTC_SRC}/${WEBRTC_OUT}/${WEBRTC_BUILD}"
+    local build_dir="${WEBRTC_SRC_DIR}/${WEBRTC_OUT}/${WEBRTC_BUILD_TYPE}"
     
-    echo "running gclient sync in '${WEBRTC_ROOT}' w/ revision ${REVISION}"
+    echo "running gclient sync in '${WEBRTC_ROOT}' w/ revision ${WEBRTC_REV}"
     cd "${WEBRTC_ROOT}"
-    if [ ! -z "$REVISION" ]; then
-        gclient sync --revision="${REVISION}"
+    if [ ! -z "$WEBRTC_REV" ]; then
+        gclient sync --no-history --revision="${WEBRTC_REV}"
     else
-        gclient sync
+        gclient sync --no-history
     fi
     
-    if [ ! -d "${WEBRTC_OUT}" ]; then
-        echo "creating out dir '${WEBRTC_OUT}'"
-        mkdir -p "${WEBRTC_OUT}"
+    if [ ! -d "${WEBRTC_SRC_DIR}/${WEBRTC_OUT}${WEBRTC_BUILD_TYPE}" ]; then
+        echo "creating out dir '${WEBRTC_SRC_DIR}/${WEBRTC_OUT}/${WEBRTC_BUILD_TYPE}'"
+        mkdir -p "${WEBRTC_SRC_DIR}/${WEBRTC_OUT}/${WEBRTC_BUILD_TYPE}"
     fi
 
-    echo "building '${WEBRTC_TARGET}' in '${WEBRTC_ROOT}/${WEBRTC_SRC}' w/:"
+    echo "building '${WEBRTC_TARGET}' in '${WEBRTC_SRC_DIR}' w/:"
     echo "  GYP_DEFINES=${GYP_DEFINES}"
     echo "  GYP_GENERATORS=${GYP_GENERATORS}"
     echo "  GYP_GENERATOR_FLAGS=${GYP_GENERATOR_FLAGS}"
     echo "  GYP_CROSSCOMPILE=${GYP_CROSSCOMPILE}"
     echo "  GYP_INCLUDE_LAST=${GYP_INCLUDE_LAST}"
-    cd "${WEBRTC_ROOT}/${WEBRTC_SRC}"
-    ninja -C ${WEBRTC_OUT}/${WEBRTC_BUILD} $WEBRTC_TARGET
+    cd "${WEBRTC_SRC_DIR}"
+    ninja $([[ ${VERBOSE} -eq 0 ]] && echo "" || echo "-v ")-C ${WEBRTC_OUT}/${WEBRTC_BUILD_TYPE} ${WEBRTC_TARGET}
     local rc=$?
     cd $working_dir
     if [ $rc -eq 0 ]; then
-        echo "'${WEBRTC_TARGET}' build in '${WEBRTC_ROOT}/${WEBRTC_SRC}' succeeded"
+        echo "'${WEBRTC_TARGET}' build in '${WEBRTC_SRC_DIR}' succeeded"
     else
-        echo "'${WEBRTC_TARGET}' build in '${WEBRTC_ROOT}/${WEBRTC_SRC}' failed (rc=${rc})"
+        echo "'${WEBRTC_TARGET}' build in '${WEBRTC_SRC_DIR}' failed (rc=${rc})"
         return $rc
     fi
     
     echo "building static-lib in '${build_dir}/libjingle.a'"
-    ${SCRIPTS}/libjingle static-lib ${build_dir} -li -s
+    ${SCRIPT_DIR}/libjingle static-lib ${build_dir} -li -s
     local rc=$?
     if [ $rc -eq 0 ]; then
         echo "'${build_dir}/libjingle.a' build succeeded"
     else
         echo "'${build_dir}/libjingle.a' build failed (rc=${rc})"
+        return $rc
+    fi
+    
+    echo "stripping debug info from shared-lib in '${build_dir}/lib/libjingle${LIBJINGLE_VER}${LIBJINGLE_TAG}.so'"
+    ${SCRIPT_DIR}/libjingle strip-debug-info ${build_dir}  ${LIBJINGLE_VER}${LIBJINGLE_TAG} -li -s -t ${TOOLCHAIN}
+    local rc=$?
+    if [ $rc -eq 0 ]; then
+        echo "'${build_dir}/lib/libjingle${LIBJINGLE_VER}${LIBJINGLE_TAG}.so' strip debug succeeded"
+    else
+        echo "'${build_dir}/lib/libjingle${LIBJINGLE_VER}${LIBJINGLE_TAG}.so' strip debug failed (rc=${rc})"
+        return $rc
+    fi
+    
+    echo "creating pkg-config in '${build_dir}/libjingle.pc'"
+    ${SCRIPT_DIR}/libjingle pkg-config ${build_dir} ${LIBJINGLE_VER}${LIBJINGLE_TAG} > ${build_dir}/libjingle.pc
+    local rc=$?
+    if [ $rc -eq 0 ]; then
+        echo "'${build_dir}/libjingle.pc' build succeeded"
+    else
+        echo "'${build_dir}/libjingle.pc' build failed (rc=${rc})"
         return $rc
     fi
 }
@@ -139,9 +175,8 @@ while [ $# -ge 1 ]; do
         -d|--dry)
             DRY=1
             ;;
-        -r|--revision)
-            shift
-            REVISION=$1
+        -v|--verbose)
+            VERBOSE=1
             ;;
         *)
             echo "invalid argument '${1}', see:"

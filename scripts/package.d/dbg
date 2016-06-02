@@ -1,0 +1,3 @@
+mkdir -p ${PACKAGE_DIR}/usr/lib/debug/usr/lib/
+
+cp ${WEBRTC_OUT}/${WEBRTC_BUILD_TYPE}/lib/libjingle${LIBJINGLE_VER}${LIBJINGLE_TAG}.so.debug ${PACKAGE_DIR}/usr/lib/debug/usr/lib/

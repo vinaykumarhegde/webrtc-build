@@ -1,0 +1,114 @@
+#!/bin/bash
+#
+# Uses AWS EC2 instance to build and package a version of libjingle based on env
+# var:
+#
+#   - LIBJINGLE_VER
+#
+# If you already have an instance define env var:
+#
+#   - AWS_INSTANCE_ID=my-instance-id
+#
+# otherwise you must define env vars:
+#
+#   - AWS_IMAGE_ID
+#   - AWS_SUBNET_ID
+#   - AWS_SEC_GROUP_ID
+#   - AWS_INSTANCE_TYPE
+#
+# and an instance will be created then deleted (unless you define DEBUG=1) once
+# done.
+#
+
+set -u
+set -e
+#set -x
+
+SCRIPT_DIR=$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)  # http://stackoverflow.com/a/246128
+ROOT_DIR=$(readlink -f "${SCRIPT_DIR}/../..")
+SCRIPTS_DIR=${SCRIPTS_DIR:-"${ROOT_DIR}/scripts"}
+PROVISION_DIR=${PROVISION_DIR:-"${ROOT_DIR}/provision"}
+TEST_DIR=${TEST_DIR:-"${ROOT_DIR}/test"}
+LIBJINGLE_VER=${LIBJINGLE_VER:-"a4ef2ce"}
+DEBUG=${DEBUG:-"0"}
+SSH_USER=${SSH_USER:-"ubuntu"}
+AWS_INSTANCE_ID=${AWS_INSTANCE_ID:-""}
+AWS_INSTANCE_PROFILE=${AWS_INSTANCE_PROFILE:-""}
+
+function delete_instance() {
+    if ! [ -z $AWS_INSTANCE_ID ]; then
+        ${SCRIPTS_DIR}/aws delete \
+--instance-id ${AWS_INSTANCE_ID} \
+--no-dry-run
+        AWS_INSTANCE_ID=""
+    fi
+}
+
+if [ -z $AWS_INSTANCE_ID ]; then
+    AWS_INSTANCE_ID="$(${SCRIPTS_DIR}/aws create \
+--image-id ${AWS_IMAGE_ID} \
+--subnet-id ${AWS_SUBNET_ID} \
+--security-group-ids ${AWS_SEC_GROUP_ID} \
+--instance-type ${AWS_INSTANCE_TYPE} \
+--instance-profile ${AWS_INSTANCE_PROFILE} \
+--terminate-on-shutdown \
+--wait)"
+    trap delete_instance EXIT HUP INT QUIT PIPE TERM
+    SSH_IP_ADDRESS="$(${SCRIPTS_DIR}/aws host \
+--instance-id ${AWS_INSTANCE_ID})"
+    ssh -o StrictHostKeyChecking=no ${SSH_USER}@${SSH_IP_ADDRESS} 'echo "sudo halt" | at now + 60 minutes'
+else
+    SSH_IP_ADDRESS="$(${SCRIPTS_DIR}/aws host \
+--instance-id ${AWS_INSTANCE_ID})"
+fi
+
+export ANSIBLE_HOST_KEY_CHECKING=False
+(cd ${PROVISION_DIR} && ansible-playbook \
+-i "${SSH_IP_ADDRESS}," \
+-u ${SSH_USER} \
+remote.yml)
+
+targets=(
+    "linux_armv7hf Release"
+    "linux_armv7hf Debug"
+    "linux_x86_64 Release"
+    "linux_x86_64 Debug"
+)
+if ! [ ${#targets[@]} -eq 0 ]; then
+    for line in "${targets[@]}"; do
+        target=($(echo $line))
+        webrtc_profile=${target[0]}
+        webrtc_build_type=${target[1]}
+        
+        ${SCRIPTS_DIR}/remote build \
+    --libjingle-ver ${LIBJINGLE_VER} \
+    --webrtc-profile $webrtc_profile \
+    --webrtc-build-type $webrtc_build_type \
+    -- ${SSH_USER}@${SSH_IP_ADDRESS}
+    
+        ${SCRIPTS_DIR}/remote package \
+    --libjingle-ver ${LIBJINGLE_VER} \
+    --webrtc-profile $webrtc_profile \
+    --webrtc-build-type $webrtc_build_type \
+    -- ${SSH_USER}@${SSH_IP_ADDRESS}
+    
+    done
+fi
+
+${SCRIPTS_DIR}/remote source-package \
+--libjingle-ver ${LIBJINGLE_VER} \
+-- \
+-o ServerAliveInterval=30 \
+-o ControlMaster=auto \
+-o ControlPersist=60s \
+${SSH_USER}@${SSH_IP_ADDRESS}
+
+sudo apt-get update
+sudo dpkg -i libjingle${LIBJINGLE_VER}-d_*$(dpkg --print-architecture).deb || true
+sudo dpkg -i libjingle${LIBJINGLE_VER}-d-dev_*$(dpkg --print-architecture).deb || true
+sudo dpkg -i libjingle${LIBJINGLE_VER}-d-dbg_*$(dpkg --print-architecture).deb || true
+sudo dpkg -i libjingle${LIBJINGLE_VER}-src_*_all.deb || true
+sudo apt-get install -f -y
+(cd ${TEST_DIR} && LIBJINGLE_VER="${LIBJINGLE_VER}-d" make clean all)
+(cd ${TEST_DIR} && ./test-static)
+(cd ${TEST_DIR} && ./test-dynamic)

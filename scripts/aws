@@ -1,0 +1,337 @@
+#!/bin/bash
+#
+# Uses AWS cli to manage (create, delete, etc) EC2 build instances. See:
+#
+#   ./scripts/aws --help
+#
+# for usage.
+#
+
+set -u
+#set -x
+
+INSTANCE_TYPE="c4.xlarge"
+
+# commands
+
+CREATE_USAGE="\
+create - Creates an instance and prints its id.
+
+--image-id {value}
+--subnet-id {value}
+--security-group-ids {value1,value2,...}
+
+--instance-profile {value}
+--region {value}
+--instance-type {value}
+--terminate-on-shutdown
+--dry-run
+--wait
+"
+
+function create() {
+    local rc=0
+
+    local image_id=""
+    local instance_type=${INSTANCE_TYPE}
+    local subnet_id=""
+    local sec_grp_ids=""
+    local instance_profile=""
+    local region=""
+    local wait=0
+    local dry_run=0
+    local terminate_on_shutdown=0
+
+    while [ $# -ge 1 ]; do
+        case "$1" in
+        --image-id)
+            image_id=$2
+            shift
+            ;;
+        --instance-type)
+            instance_type=$2
+            shift
+            ;;
+        --subnet-id)
+            subnet_id=$2
+            shift
+            ;;
+        --security-group-ids)
+            sec_grp_ids=$2
+            shift
+            ;;
+        --instance-profile)
+            instance_profile=$2
+            shift
+            ;;
+        --region)
+            region=$2
+            shift
+            ;;
+        --dry-run)
+            dry_run=1
+            ;;
+        --terminate-on-shutdown)
+            terminate_on_shutdown=1
+            ;;
+        --wait)
+            wait=1
+            ;;
+        -h|--help)
+            printf "$CREATE_USAGE"
+            exit 0
+            ;;
+        *)
+            echo "invalid argument '${1}', see:"
+            printf "$CREATE_USAGE"
+            exit 1
+            ;;
+        esac
+        shift
+    done
+    if [ -z $image_id ] || [ -z $subnet_id ] || [ -z $sec_grp_ids ]; then
+        printf "$CREATE_USAGE"
+        exit 1
+    fi
+    
+    local opts=""
+    [ -z $instance_profile ] || opts=${opts}" --iam-instance-profile Arn=${instance_profile}"
+    [ $terminate_on_shutdown -eq "0" ] || opts=${opts}" --instance-initiated-shutdown-behavior terminate"
+    [ -z $region ] || opts=${opts}" --region=${region}"
+    [ $dry_run -eq "0" ] || opts=${opts}" --dry-run"
+    
+    local run_instances=$(aws ec2 run-instances \
+${opts} \
+--image-id ${image_id} \
+--security-group-ids ${sec_grp_ids} \
+--instance-type ${instance_type} \
+--subnet-id ${subnet_id} \
+--count 1)
+    if [ $rc -ne 0 ]; then
+        return $rc
+    fi
+
+    local instance_id=$(echo $run_instances | jq ".Instances[].InstanceId" | sed 's/"//g')
+    if [ -z ${instance_id} ]; then
+        exit 2
+    fi
+    echo ${instance_id}
+
+    if [ $wait -eq 1 ]; then
+        opts=""
+        [ -z $region ] || opts=${opts}" --region=${region}"
+        [ $dry_run -eq "0" ] || opts=${opts}" --dry-run"
+        
+        aws ec2 wait instance-status-ok \
+${opts} \
+--instance-ids ${instance_id}
+        rc=$?
+        if [ $rc -ne 0 ]; then
+            exit $rc
+        fi
+    fi
+}
+
+DELETE_USAGE="\
+delete - Deletes an instance.
+
+--instance-id {value}
+
+--no-dry-run
+--region {value}
+"
+
+function delete() {
+    local rc=0
+
+    local instance_id=""
+    local instance_profile=""
+    local region=""
+    local no_dry_run=0
+    
+    while [ $# -ge 1 ]; do
+        case "$1" in
+        --region)
+            region=$2
+            shift
+            ;;
+        --instance-id)
+            instance_id=$2
+            shift
+            ;;
+        --no-dry-run)
+            no_dry_run=1
+            shift
+            ;;
+        -h|--help)
+            printf "$DELETE_USAGE"
+            exit 0
+            ;;
+        *)
+            echo "invalid argument '${1}', see:"
+            printf "$CREATE_USAGE"
+            exit 1
+            ;;
+        esac
+        shift
+    done
+    if [ -z $instance_id ]; then
+        printf "$DELETE_USAGE"
+        exit 1
+    fi
+    
+    local opts=""
+    [ -z $region ] || opts=${opts}" --region=${region}"
+    [ $no_dry_run -eq "1" ] || opts=${opts}" --dry-run"
+
+    aws ec2 terminate-instances \
+${opts} \
+--instance-ids ${instance_id}
+    rc=$?
+    if [ $rc -ne 0 ]; then
+        exit $rc
+    fi
+}
+
+LIST_USAGE="\
+lists - Prints created instances.
+
+--instance-profile {value}
+--region {value}
+"
+
+function list() {
+    local rc=0
+
+    local instance_profile=""
+    local region=""
+    
+     while [ $# -ge 1 ]; do
+        case "$1" in
+        --instance-profile)
+            instance_profile=$2
+            shift
+            ;;
+        --region)
+            region=$2
+            shift
+            ;;
+        -h|--help)
+            printf "$LIST_USAGE"
+            exit 0
+            ;;
+        *)
+            echo "invalid argument '${1}', see:"
+            printf "$CREATE_USAGE"
+            exit 1
+            ;;
+        esac
+        shift
+    done
+    
+    local opts=""
+    [ -z $instance_profile ] || opts=${opts}" --filter Name=iam-instance-profile.arn,Values=${instance_profile}"
+    [ -z $region ] || opts=${opts}" --region=${region}"
+ 
+    local describe_instances=$(aws ec2 describe-instances \
+--query "Reservations[*].Instances[0].{InstanceId:InstanceId}")
+    rc=$?
+    if [ $rc -ne 0 ]; then
+        exit $rc
+    fi
+    
+    for instance_id in $(echo $describe_instances | jq ".[].InstanceId"); do
+        echo $instance_id | sed 's/"//g'
+    done
+}
+
+HOST_USAGE="\
+host - Prints the public IP address of an instance.
+
+--instance-id {value}
+
+--region {value}
+"
+
+function host() {
+    local rc=0
+    
+    local instance_id=""
+    local region=""
+    
+    while [ $# -ge 1 ]; do
+        case "$1" in
+        --region)
+            region=$2
+            shift
+            ;;
+        --instance-id)
+            instance_id=$2
+            shift
+            ;;
+        -h|--help)
+            printf "$HOST_USAGE"
+            exit 0
+            ;;
+        *)
+            echo "invalid argument '${1}', see:"
+            printf "$HOST_USAGE"
+            exit 1
+            ;;
+        esac
+        shift
+    done
+    if [ -z $instance_id ]; then
+        printf "$HOST_USAGE"
+        exit 1
+    fi
+    
+    local opts=""
+    [ -z $region ] || opts=${opts}" --region=${region}"
+ 
+    local describe_instances=$(aws ec2 describe-instances \
+--instance-ids ${instance_id} \
+--query "Reservations[*].Instances[0].{PublicIpAddress:PublicIpAddress}")
+    rc=$?
+    if [ $rc -ne 0 ]; then
+        exit $rc
+    fi
+    
+    for ip_address in $(echo $describe_instances | jq ".[].PublicIpAddress"); do
+        echo $ip_address | sed 's/"//g'
+    done
+}
+
+# entry
+
+USAGE="\
+Uses AWS cli to:
+
+    create [options]
+    delete [options]
+    list [options]
+    host [options]
+
+EC2 build instances. Use --help on a sub-command, e.g.:
+
+    create --help
+
+to see sub-command specific help.
+"
+
+case "$1" in
+create|list|host|delete)
+    cmd=$1
+    ;;
+-h|--help)
+    printf "$USAGE"
+    exit 0
+    ;;
+*)
+    echo "invalid argument \"${1}\", see:"
+    printf "$USAGE"
+    exit 1
+    ;;
+esac
+shift
+eval $cmd "$@"
