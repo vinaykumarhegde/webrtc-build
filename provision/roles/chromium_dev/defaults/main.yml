@@ -1,2 +1,4 @@
 ---
-chromium_dev_root: "~"
+
+chromium_dev_group: build
+chromium_dev_root: /opt

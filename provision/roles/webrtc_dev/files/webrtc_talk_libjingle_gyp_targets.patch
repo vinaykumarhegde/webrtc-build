@@ -1,0 +1,46 @@
+diff --git a/talk/libjingle.gyp b/talk/libjingle.gyp
+index 38260fb..ce5d169 100755
+--- a/talk/libjingle.gyp
++++ b/talk/libjingle.gyp
+@@ -26,6 +26,9 @@
+ 
+ {
+   'includes': ['build/common.gypi'],
++  'variables': {
++      'libjingle_so_name%': 'jingle'
++  },
+   'conditions': [
+     ['os_posix == 1 and OS != "mac" and OS != "ios"', {
+      'conditions': [
+@@ -43,6 +46,31 @@
+     ['OS=="linux" or OS=="android"', {
+       'targets': [
+         {
++          'target_name': 'libjingle_so',
++          'product_name': '<(libjingle_so_name)',
++          'type': 'shared_library',
++          'lib': 'libjingle.so',
++          'dependencies': [
++            'libjingle_peerconnection',
++          ],
++          'sources': [
++            'media/base/audioframe.h',
++          ],
++          'conditions': [
++            ['OS=="linux"', {
++              'defines': [
++                'HAVE_GTK',
++              ],
++              'link_settings': {
++                'libraries': [
++                  '<!@(pkg-config --libs-only-l gobject-2.0 gthread-2.0 gtk+-2.0)',
++                  '-lstdc++',
++                ],
++              },
++            }],
++          ],
++        },
++        {
+           'target_name': 'libjingle_peerconnection_so',
+           'type': 'shared_library',
+           'dependencies': [

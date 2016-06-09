@@ -1,2 +1,4 @@
 #!/bin/sh
-export PATH={{ chromium_dev_root }}/depot_tools:${PATH}
+if echo ' '$(id -Gn )' ' | grep -q '\b{{ chromium_dev_group }}\b'; then
+   export PATH={{ chromium_dev_root }}/depot_tools:${PATH}
+fi

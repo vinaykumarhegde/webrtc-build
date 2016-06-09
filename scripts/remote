@@ -1,0 +1,168 @@
+#!/bin/bash
+#
+# Uses SSH to execute build and package commands on remote instances. See:
+#
+#   ./scripts/remote--help
+#
+# for usage.
+#
+
+SCRIPT_DIR=$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)  # http://stackoverflow.com/a/246128
+BUILD_PATH=${BUILD_DIR:-"/opt/webrtc"}
+WEBRTC_PROFILE=${WEBRTC_PROFILE:-"linux_x86_64"}
+WEBRTC_BUILD_TYPE=${WEBRTC_PROFILE:-"Debug"}
+LIBJINGLE_VER=${LIBJINGLE_VER:-"a4ef2ce"}
+LIBJINGLE_TAG=${LIBJINGLE_VER:-""}
+
+# commands
+
+function build() {
+    local rc=0
+    
+    ssh ${SSH_OPTS} 2>&1 <<EOF
+set -e
+
+cd $BUILD_PATH
+
+rm src/out/${WEBRTC_PROFILE}/${WEBRTC_BUILD_TYPE} -rf
+export WEBRTC_PROFILE=${WEBRTC_PROFILE}
+export WEBRTC_BUILD_TYPE=${WEBRTC_BUILD_TYPE}
+export LIBJINGLE_VER=${LIBJINGLE_VER}
+./scripts/build
+
+ls -m1 src/out/${WEBRTC_PROFILE}/${WEBRTC_BUILD_TYPE}
+EOF
+    rc=$?
+    if [ $rc -ne 0 ]; then
+        return $rc
+    fi
+}
+
+function package() {
+    local rc=0
+    
+    ssh ${SSH_OPTS} 2>&1 <<EOF
+set -e
+
+cd $BUILD_PATH
+
+export WEBRTC_PROFILE=${WEBRTC_PROFILE}
+export WEBRTC_BUILD_TYPE=${WEBRTC_BUILD_TYPE}
+export LIBJINGLE_VER=${LIBJINGLE_VER}
+./scripts/package dev bin dbg
+
+ls -m1 out/*${LIBJINGLE_VER}*deb
+EOF
+    scp ${SSH_OPTS}:${BUILD_PATH}/out/*${LIBJINGLE_VER}${LIBJINGLE_TAG}{,-dev,-dbg}_*.deb .
+}
+
+function source_package() {
+    local rc=0
+    
+    ssh ${SSH_OPTS} 2>&1 <<EOF
+set -e
+
+cd $BUILD_PATH
+
+export WEBRTC_PROFILE=${WEBRTC_PROFILE}
+export WEBRTC_BUILD_TYPE=${WEBRTC_BUILD_TYPE}
+export LIBJINGLE_VER=${LIBJINGLE_VER}
+./scripts/package src
+
+ls -m1 out/*${LIBJINGLE_VER}-src_*deb
+EOF
+    scp ${SSH_OPTS}:${BUILD_PATH}/out/*${LIBJINGLE_VER}-src_*.deb .
+}
+
+# entry
+
+USAGE="\
+Uses SSH to run build and packing commands on a remote instance:
+
+    [command]+ [options] -- [ssh-options]
+
+where [command] is one of:
+
+    build
+    package
+    source-package
+
+and [options]:
+
+    --webrtc-profile {value}
+    --webrtc-build-type {value}
+    --libjingle-ver {value}
+
+and [ssh-options] are th ssh options used to target the remote machine e.g.:
+
+    me@host -i ~/.ssh/me_rsa
+
+"
+
+cmds=()
+
+case "$" in
+Debug)
+    LIBJINGLE_TAG="-d"
+    ;;
+*)
+    LIBJINGLE_TAG=""
+    ;;
+esac
+
+while [ $# -ge 1 ]; do
+    case "$1" in
+    build|package|source-package)
+        cmds+=$(echo $1 | sed 's/-/_/g')
+        ;;
+    --webrtc-profile)
+        WEBRTC_PROFILE=$2
+        shift
+        ;;
+    --webrtc-build-type)
+        WEBRTC_BUILD_TYPE=$2
+        shift
+        ;;
+     --libjingle-ver)
+        LIBJINGLE_VER=$2
+        shift
+        ;;
+    -h|--help)
+        printf "$USAGE"
+        exit 0
+        ;;
+     --)
+        shift
+        SSH_OPTS="$@"
+        break
+        ;;
+    *)
+        echo "invalid argument '${1}', see:"
+        printf "$USAGE" >&2
+        exit 1
+        ;;
+    esac
+    shift
+done
+if [ -z "${WEBRTC_PROFILE}" ] || [ -z "${WEBRTC_BUILD_TYPE}" ] || [ -z "{$SSH_OPTS}" ]; then
+    printf "$USAGE"
+    exit 1
+fi
+if [ ${#cmds[@]} -eq 0 ]; then
+    cmds=(build package)
+fi
+case "$WEBRTC_BUILD_TYPE" in
+Debug)
+    LIBJINGLE_TAG="-d"
+    ;;
+*)
+    LIBJINGLE_TAG=""
+    ;;
+esac
+
+printf "sourcing profile \"${WEBRTC_PROFILE}\" for build \"${WEBRTC_BUILD_TYPE}\"\n" >&2
+source "${SCRIPT_DIR}/profile.d/${WEBRTC_PROFILE}"
+
+for cmd in "${cmds[@]}"; do
+    eval $cmd $webrtc_profile $webrtc_build_type $libjingle_ver ${ssh_opts}
+done

@@ -1,0 +1,63 @@
+---
+
+- hosts: all
+  vars:
+    common_dev_group: build
+  tasks:
+  - name: add ansible user to build group
+    user: >
+      name={{ ansible_user }}
+      groups={{ common_dev_group }}
+      append=yes
+    register: add_to_group
+    become: yes
+  
+  # https://github.com/ansible/ansible-modules-core/issues/921#issuecomment-78291847
+  - name: kill ssh session
+    shell: sleep 1; pkill -u {{ ansible_user }} sshd
+    async: 3
+    poll: 2
+    when: add_to_group|changed
+  roles:
+  - common
+
+- hosts: all
+  vars:
+    workspace_device: /dev/xvdb
+    workspace_dir: /opt/webrtc
+    workspace_group: build
+  tasks:
+  - name: format workspace device
+    filesystem: fstype=ext4 dev={{ workspace_device }}
+    become: yes
+    tags: [webrtc-workspace]
+
+  - name: mount workspace device
+    mount: >
+      name={{ workspace_dir }}
+      src={{ workspace_device }}
+      fstype=ext4
+      opts="defaults,noatime"
+      dump=0
+      passno=0
+      state=mounted
+    become: yes
+    tags: [webrtc-workspace]
+
+- hosts: all
+  vars:
+    chromium_dev_group: build
+    webrtc_dev_group: build
+    webrtc_dev_skip_checkout: no
+  roles:
+  - chromium_dev
+  - webrtc_dev
+  - webrtc_build
+
+- hosts: all
+  tasks:
+  - command: apt-get -y autoremove
+    become: yes
+    
+  - command: apt-get -y clean
+    become: yes

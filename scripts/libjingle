@@ -22,6 +22,7 @@ $ ./scripts/libjingle --help
 
 """
 import argparse
+import glob
 import logging
 import os
 import re
@@ -36,7 +37,7 @@ logger = logging.getLogger(__name__)
 
 
 class Ninja(dict):
-    
+
     def __init__(self, io, strict=False):
         super(Ninja, self).__init__({
             'build': {},
@@ -44,7 +45,7 @@ class Ninja(dict):
             'var': {},
         })
         self._parse(io, strict=strict)
-        
+
     @property
     def build(self):
         return self['build']
@@ -52,26 +53,26 @@ class Ninja(dict):
     @property
     def rule(self):
         return self['rule']
-    
+
     @property
     def var(self):
         return self['var']
-    
+
     class Build(dict):
-        
+
         @property
         def inputs(self):
             return self['inputs']
-    
+
     class InvalidBlock(ValueError):
-        
+
         def __init__(self, src, pos, header, body):
             self.src = src
             self.pos = pos
             self.header = header
             self.body = body
             super(Ninja.InvalidBlock, self).__init__(str(self))
-        
+
         def __str__(self):
             return '{src} @ {pos} - \n{header}\n{body}'.format(
                 src=self.src,
@@ -79,15 +80,15 @@ class Ninja(dict):
                 header=self.header,
                 body=self.body,
             )
-    
+
     class UnknownBlock(InvalidBlock):
-        
+
         pass
-    
+
     class MalformedBlock(InvalidBlock):
-        
+
         pass
-    
+
     def _parse(self, io, strict):
         name = getattr(io, 'name', '<memory>')
         loc, buffer = 0, []
@@ -113,7 +114,7 @@ class Ninja(dict):
                         raise
                     logger.debug(str(ex), exc_info=ex)
             loc, buffer = i, [line]
-        
+
     def _parse_block(self, src_name, src_loc, header, body):
         if re.match('build\s+', header) is not None:
             parse = self._parse_build
@@ -122,7 +123,7 @@ class Ninja(dict):
         else:
             raise self.UnknownBlock(src_name, src_loc, header, body)
         return parse(src_name, src_loc, header, body)
-    
+
     def _parse_build(self, src_name, src_loc, header, body):
         m = re.match('build\s+(?P<output>.+?)\:\s*(?P<name>\w+)(?P<inputs>.+)?', header)
         if m is None:
@@ -136,7 +137,7 @@ class Ninja(dict):
             ],
         )
         return True
-    
+
     def _parse_variable(self, src_name, src_loc, header, body):
         m = re.match('(?P<name>\w+)\s*=\s*(?P<values>.+)?', header)
         if m is None:
@@ -152,11 +153,11 @@ class Ninja(dict):
 
 
 class PkgConfig(object):
-    
+
     TEMPLATE = r"""\
 prefix=${config.prefix}
-libdir=<%text>${prefix}</%text>/lib
-includedir=<%text>${prefix}</%text>/include/jingle
+libdir=<%text>${prefix}</%text>/lib/libjingle${config.version}
+includedir=<%text>${prefix}</%text>/include/libjingle${config.version}
 
 Name: ${config.name}
 Description: Google's WebRTC implementation.
@@ -165,6 +166,7 @@ Version: ${config.version}
 Requires: 
 Requires.private:
 Conflicts:
+
 Cflags: \
 -I<%text>${includedir} \</%text>
 % for define in config.defines:
@@ -173,44 +175,46 @@ ${define} <%text>\</%text>
 
 Libs: \
 -L<%text>${libdir} \</%text>
--ljingle <%text>\</%text>
+-ljingle${config.version} <%text>\</%text>
+
+Libs.private: \
 % for lib in config.libs:
 ${lib} <%text>\</%text>
 % endfor
--lpthread <%text>\</%text>
+-lpthread
 
 """
-    
+
     def __init__(self, prefix, version, ninja):
         self.name = 'libjingle'
         self.version = version
         self.prefix = prefix
         self.defines = ninja.var['defines']
         self.libs = ninja.var['libs']
-        
+
     def __str__(self):
         return unicode(self).encode('utf-8')
-    
+
     def __unicode__(self):
         return mako.template.Template(self.TEMPLATE).render(config=self)
 
 
 class Archive(object):
-    
-    BUILD_RULE = 'obj/talk/libjingle_peerconnection_so.actions_depends.stamp'
-    
+
+    BUILD_RULE = 'obj/talk/libjingle_so.actions_depends.stamp'
+
     def __init__(self, work_dir, name, ninja):
         self.work_dir = work_dir
         self.name = name
         self.inputs = ninja.build[self.BUILD_RULE].inputs
-    
+
     @property
     def script(self):
         return ArchiveScript(self)
 
 
 class ArchiveScript(object):
-    
+
     TEMPLATE = """\
 CREATE ${archive.name}.a
 
@@ -226,26 +230,26 @@ END
     def __init__(self, archive, ar=None):
         self.ar = ar or 'ar'
         self.archive = archive
-    
+
     def __str__(self):
         return unicode(self).encode('utf-8')
-    
+
     def __unicode__(self):
         return mako.template.Template(self.TEMPLATE).render(
             archive=self.archive,
         )
-    
+
     def __call__(self):
         logger.debug('rendering script')
         rendered = str(self)
-        
+
         tmp_fd, tmp_path = tempfile.mkstemp(prefix='libjingle_', suffix='.ar')
         logger.info('writing script to "%s"', tmp_path)
         with open(tmp_path, 'w') as tmp_fo:
             os.close(tmp_fd)
             logger.debug('\n%s', rendered)
             tmp_fo.write(rendered)
-            
+
         command = [self.ar, '-M']
         logger.info('call(%s) w/ cwd "%s"', ' '.join(command), self.archive.work_dir)
         with open(tmp_path, 'r') as tmp_fo:
@@ -260,7 +264,7 @@ END
 
 def create_static_lib(args):
     work_dir = os.path.abspath(args.work[0])
-    with open(os.path.join(work_dir, 'obj', 'talk', 'libjingle_peerconnection_so.ninja'), 'r') as fo:
+    with open(os.path.join(work_dir, 'obj', 'talk', 'libjingle_so.ninja'), 'r') as fo:
         ninja = Ninja(fo, args.strict)
     archive = Archive(work_dir, 'libjingle', ninja)
     archive.script()
@@ -268,30 +272,61 @@ def create_static_lib(args):
 
 def create_pkg_config(args):
     work_dir = os.path.abspath(args.work[0])
-    with open(os.path.join(work_dir, 'obj', 'talk', 'libjingle_peerconnection_so.ninja'), 'r') as fo:
+    with open(os.path.join(work_dir, 'obj', 'talk', 'libjingle_so.ninja'), 'r') as fo:
         ninja = Ninja(fo)
     pkg_config = PkgConfig(version=args.version[0], prefix='/usr', ninja=ninja)
     print pkg_config
 
 
+def strip_debug_info(args):
+    work_dir = os.path.abspath(args.work[0])
+    lib_dir = os.path.join(work_dir, 'lib')
+    os.chdir(lib_dir)
+    file_name = 'libjingle{0}.so'.format(args.version[0])
+    debug_file_name = '{0}.debug'.format(file_name)
+    logger.info('copy debug info from "%s" -> "%s"', file_name, debug_file_name)
+    subprocess.check_call([
+        os.path.join(args.toolchain, 'bin', 'objcopy'),
+        '--only-keep-debug', file_name,
+        debug_file_name
+    ])
+    logger.info('strip debug from "%s"', file_name)
+    subprocess.check_call([
+        os.path.join(args.toolchain, 'bin', 'strip'),
+        '{0}.debug'.format(file_name)
+    ])
+    logger.info('debug link "%s" -> %s', file_name, debug_file_name)
+    subprocess.check_call([
+        os.path.join(args.toolchain, 'bin', 'objcopy'),
+        '--add-gnu-debuglink={0}'.format(debug_file_name),
+        file_name,
+    ])
+
+
 def main():
     parser = argparse.ArgumentParser()
-    
+
     parser_common = argparse.ArgumentParser(add_help=False)
     parser_common.add_argument('-l', '--log-level', default='d', choices=['d', 'i', 'w', 'e'])
     parser_common.add_argument('-s', '--strict', default=False, action='store_true')
-    
+    parser_common.add_argument('-t', '--toolchain', default='/usr/bin')
+
     subparsers = parser.add_subparsers()
 
     parser_sub = subparsers.add_parser('static-lib', parents=[parser_common], help='create static library.')
     parser_sub.add_argument('work', nargs=1, help='build work directory.')
     parser_sub.set_defaults(command=create_static_lib)
-    
+
     parser_sub = subparsers.add_parser('pkg-config', parents=[parser_common], help='create pkgconfig for static library.')
     parser_sub.add_argument('work', nargs=1, help='build work directory.')
     parser_sub.add_argument('version', nargs=1, help='library version.')
     parser_sub.set_defaults(command=create_pkg_config)
-    
+
+    parser_sub = subparsers.add_parser('strip-debug-info', parents=[parser_common], help='strip debug info from shared library.')
+    parser_sub.add_argument('work', nargs=1, help='build work directory.')
+    parser_sub.add_argument('version', nargs=1, help='library version.')
+    parser_sub.set_defaults(command=strip_debug_info)
+
     args = parser.parse_args()
     logging.basicConfig(
         level={
@@ -305,5 +340,5 @@ def main():
     args.command(args)
 
 
-if __name__  == '__main__':
+if __name__ == '__main__':
     main()

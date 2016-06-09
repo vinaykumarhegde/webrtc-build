@@ -1,0 +1,15 @@
+---
+
+- name: fetching (can take HOURS!)
+  shell: "PATH={{ chromium_dev_root }}/depot_tools/:${PATH}; source /etc/profile && fetch webrtc"
+  args: 
+    chdir: "{{ webrtc_dev_root }}/webrtc"
+    executable: /bin/bash
+  register: fetch
+  failed_when: fetch.rc != 0 and 'Your current directory appears to already contain, or be part of' not in fetch.stdout
+
+- name: sync (can take HOURS!)
+  shell: "PATH={{ chromium_dev_root }}/depot_tools/:${PATH}; source /etc/profile && gclient sync --revision={{ webrtc_dev_rev }}"
+  args:
+    chdir: "{{ webrtc_dev_root }}/webrtc"
+    executable: /bin/bash

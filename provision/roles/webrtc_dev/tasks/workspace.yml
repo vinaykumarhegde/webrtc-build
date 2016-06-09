@@ -1,0 +1,25 @@
+---
+
+- name: create src directory
+  file: >
+    path={{ webrtc_dev_root }}/webrtc/src
+    state=directory
+    group={{ webrtc_dev_group }}
+    mode="u=rwx,g=srwx,o=rx"
+  become: yes
+
+- name: create build directory
+  file: >
+    path={{ webrtc_dev_root }}/webrtc
+    state=directory 
+    group={{ webrtc_dev_group }}
+    mode="u=rwx,g=srwx,o=rx"
+  become: yes
+
+- name: create gclient conf
+  template: >
+    src=gclient.j2
+    dest="{{ webrtc_dev_root }}/webrtc/.gclient"
+    group={{ webrtc_dev_group }}
+    mode=0664
+  become: yes

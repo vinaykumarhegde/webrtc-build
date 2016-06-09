@@ -1,0 +1,13 @@
+mkdir -p ${PACKAGE_DIR}/usr/src/libjingle${LIBJINGLE_VER}/
+
+find \
+. \
+\( \
+-name "*.h" -o \
+-name "*.c" -o \
+-name "*.hpp" -o \
+-name "*.cpp" -o \
+-name "*.hh" -o \
+-name "*.cc" \
+\) \
+-exec cp --parents {} ${PACKAGE_DIR}/usr/src/libjingle${LIBJINGLE_VER}/ \;

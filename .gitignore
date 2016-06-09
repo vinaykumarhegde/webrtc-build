@@ -1,1 +1,9 @@
+*.o
 .vagrant
+provision/*retry
+webrtc/
+*.deb
+todo
+test/test-static
+test/test-dynamic
+

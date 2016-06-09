@@ -1,0 +1,254 @@
+#!/bin/bash
+#
+# WebRTC package scripts, which based on these:
+#
+#   WEBRTC_SRC_DIR=${WEBRTC_ROOT:-`pwd`/../webrtc}
+#   WEBRTC_PROFILE=${WEBRTC_PROFILE:-"linux_x86_64"}
+#   WEBRTC_BUILD=${WEBRTC_BUILD:-"Debug"}
+#   WEBRTC_OUT=${WEBRTC_OUT:-"out/${WEBRTC_PROFILE}"}
+#   LIBJINGLE_VER=${LIBJINGLE_VER:-"${WEBRTC_REV}"}
+#
+
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)  # http://stackoverflow.com/a/246128
+PROFILES_DIR="${SCRIPT_DIR}/profile.d"
+PACKAGES_DIR="${SCRIPT_DIR}/package.d"
+DIR=$(readlink -f ${SCRIPT_DIR}/../)
+
+WEBRTC_SRC_DIR=${WEBRTC_SRC_DIR:-"${DIR}/src"}
+WEBRTC_PROFILE=${WEBRTC_PROFILE:-"linux_x86_64"}
+WEBRTC_BUILD_TYPE=${WEBRTC_BUILD_TYPE:-"Debug"}
+WEBRTC_OUT=${WEBRTC_OUT:-"out/${WEBRTC_PROFILE}"}
+WEBRTC_REV=${WEBRTC_REV:-`cd ${WEBRTC_SRC_DIR} && git rev-parse --short HEAD`}
+
+LIBJINGLE_VER=${LIBJINGLE_VER:-"${WEBRTC_REV}"}
+case "$WEBRTC_BUILD_TYPE" in
+Debug)
+    LIBJINGLE_TAG="-d"
+    ;;
+*)
+    LIBJINGLE_TAG=""
+    ;;
+esac
+
+DEB_VER=${DEB_VER:-"1"}
+DEB_REV=${DEB_REV:-"1"}
+DEB_OUT_DIR=${DIR}/out
+DEB_ARCH=
+
+USAGE="\
+[WEBRTC_{option}={value}]* $0 [-d|--dry] [-h|--help]
+
+where WEBRTC_{option} is one of:
+
+WEBRTC_SRC_DIR= Name of WebRTC source directory in \${WEBRTC_ROOT}, defaults to werbrtc.
+WEBRTC_PROFILE= Profile name or file to be sourced, defaults to linux_x86_64.
+WEBRTC_BUILD_TYPE= Built type, defaults to Debug.
+WEBRTC_OUT= Output directory in \$WEBRTC_ROOT/\$WEBRTC_SRC/out, \${WEBRTC_PROFILE}.
+WEBRTC_REV= 
+LIBJINGLE_VER= 
+
+e.g.
+
+\$ WEBRTC_PROFILE=linux_armv7hf WEBRTC_BUILD_TYPE=Debug $0
+"
+
+function setupenv() {
+    local profile=""
+    for file in "${WEBRTC_PROFILE}" "${PROFILES_DIR}/${WEBRTC_PROFILE}"; do
+        if [ -f $file ]; then
+            profile=$file
+        fi
+    done
+    if [ $profile = "" ]; then
+        return 1
+    fi
+    echo "sourcing profile '${profile}'"
+    source "${profile}"
+}
+
+# package
+
+function package_dev() {
+    PACKAGE_DIR=${DEB_OUT_DIR}/dev
+    mkdir -p ${PACKAGE_DIR}
+    rm -rf ${PACKAGE_DIR}/*
+    cd ${WEBRTC_SRC_DIR} && source ${PACKAGES_DIR}/dev
+    echo "creating libjingle${LIBJINGLE_VER}${LIBJINGLE_TAG}-dev ..."
+    cd ${DEB_OUT_DIR} && fpm \
+-f \
+-s dir \
+-t deb \
+-a ${DEB_ARCH} \
+-n libjingle${LIBJINGLE_VER}${LIBJINGLE_TAG}-dev \
+-v ${DEB_VER} \
+--iteration ${DEB_REV} \
+-d libjingle${LIBJINGLE_VER}${LIBJINGLE_TAG} \
+-d libglib2.0-dev \
+-d libgtk2.0-dev \
+-d libatk1.0-dev \
+-d libgdk-pixbuf2.0-dev \
+-d libcairo2-dev \
+-d libpango1.0-dev \
+-d libfontconfig1-dev \
+-d libfreetype6-dev \
+-d libexpat1-dev \
+-d libc6-dev \
+-d libxext-dev \
+-d libx11-dev \
+-d libxcomposite-dev \
+-d libxrender-dev \
+-d libnss3-dev \
+-d libnspr4-dev \
+-d libxfixes-dev \
+-d libxinerama-dev \
+-d libxi-dev \
+-d libxrandr-dev \
+-d libxcursor-dev \
+-d libxdamage-dev \
+-d zlib1g-dev \
+-d libselinux1-dev \
+-d libharfbuzz-dev \
+-d libpixman-1-dev \
+-d libpng12-dev \
+-d libxcb-shm0-dev \
+-d libxcb-render0-dev \
+-d libxcb1-dev \
+-d libthai-dev \
+-d libffi-dev \
+-d libpcre3-dev \
+-d libgraphite2-dev \
+-d libxau-dev \
+-d libxdmcp-dev \
+-d libdatrie-dev \
+-C ${PACKAGE_DIR} \
+.
+}
+
+function package_bin() {
+    PACKAGE_DIR=${DEB_OUT_DIR}/bin
+    mkdir -p ${PACKAGE_DIR}
+    rm -rf ${PACKAGE_DIR}/*
+    cd ${WEBRTC_SRC_DIR} && source ${PACKAGES_DIR}/bin
+    echo "creating libjingle${LIBJINGLE_VER}${LIBJINGLE_TAG} ..."
+    cd ${DEB_OUT_DIR} && fpm \
+-f \
+-s dir \
+-t deb \
+-a ${DEB_ARCH} \
+-n libjingle${LIBJINGLE_VER}${LIBJINGLE_TAG} \
+-v ${DEB_VER} \
+--iteration ${DEB_REV} \
+-d libglib2.0-0 \
+-d libgtk2.0-0 \
+-d libatk1.0-0 \
+-d libpangoft2-1.0-0 \
+-d libpangocairo-1.0-0 \
+-d libgdk-pixbuf2.0-0 \
+-d libcairo2 \
+-d libpango-1.0-0 \
+-d libfontconfig1 \
+-d libfreetype6 \
+-d libexpat1 \
+-d libc6 \
+-d libxext6 \
+-d libx11-6 \
+-d libxcomposite1 \
+-d libxrender1 \
+-d libnss3 \
+-d libnspr4 \
+-d libstdc++6 \
+-d libxfixes3 \
+-d libxinerama1 \
+-d libxi6 \
+-d libxrandr2 \
+-d libxcursor1 \
+-d libxdamage1 \
+-d zlib1g \
+-d libselinux1 \
+-d libharfbuzz0b \
+-d libpixman-1-0 \
+-d libpng12-0 \
+-d libxcb-shm0 \
+-d libxcb-render0 \
+-d libxcb1 \
+-d libthai0 \
+-d libffi6 \
+-d libpcre3 \
+-d libgraphite2-2.0.0 \
+-d libxau6 \
+-d libxdmcp6 \
+-d libdatrie1 \
+-C ${PACKAGE_DIR} \
+.
+}
+
+function package_dbg() {
+    PACKAGE_DIR=${DEB_OUT_DIR}/dbg
+    mkdir -p ${PACKAGE_DIR}
+    rm -rf ${PACKAGE_DIR}/*
+    cd ${WEBRTC_SRC_DIR} && source ${PACKAGES_DIR}/dbg
+    echo "creating libjingle${LIBJINGLE_VER}${LIBJINGLE_TAG}-dbg ..."
+    cd ${DEB_OUT_DIR} && fpm \
+-f \
+-s dir \
+-t deb \
+-a ${DEB_ARCH} \
+-n libjingle${LIBJINGLE_VER}${LIBJINGLE_TAG}-dbg \
+-v ${DEB_VER} \
+--iteration ${DEB_REV} \
+-d libjingle${LIBJINGLE_VER}${LIBJINGLE_TAG} \
+-C ${PACKAGE_DIR} \
+.
+}
+
+function package_src() {
+    PACKAGE_DIR=${DEB_OUT_DIR}/src
+    mkdir -p ${PACKAGE_DIR}
+    rm -rf ${PACKAGE_DIR}/*
+    cd ${WEBRTC_SRC_DIR} && source ${PACKAGES_DIR}/src
+    echo "creating libjingle${LIBJINGLE_VER}-src ..."
+    cd ${DEB_OUT_DIR} && fpm \
+-f \
+-s dir \
+-t deb \
+-a all \
+-n libjingle${LIBJINGLE_VER}-src \
+-v ${DEB_VER} \
+--iteration ${DEB_REV} \
+-C ${PACKAGE_DIR} \
+.
+}
+
+# main
+
+debs=()
+
+while [ $# -ge 1 ]; do
+    case "$1" in
+    -h|--help)
+        printf "$USAGE"
+        exit 0
+        ;;
+    -d|--dry)
+        DRY=1
+        ;;
+    dev|bin|dbg|src)
+        debs+=($1)
+        ;;
+    *)
+        echo "invalid argument '${1}', see:"
+        printf "$USAGE"
+        exit 1
+        ;;
+    esac
+    shift
+done
+
+if [ ${#debs[@]} -eq 0 ]; then
+    debs=(dev bin dbg)
+fi
+setupenv
+for deb in "${debs[@]}"; do
+    echo "packaging ${deb}"
+    eval package_${deb}
+done

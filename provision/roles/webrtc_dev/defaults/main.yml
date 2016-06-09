@@ -1,5 +1,11 @@
 ---
-webrtc_dev_root: "~"
+
+webrtc_dev_group: build
+webrtc_dev_root: /opt
 webrtc_dev_gclient:
   url: https://chromium.googlesource.com/external/webrtc.git
   custom_deps: {}
+webrtc_dev_rev: a4ef2ce29de0c68b869f8d66276bc5acba54cc79
+webrtc_dev_ver: "1{{ webrtc_dev_rev[:7] }}"
+webrtc_dev_src: "/usr/src/libjingle{{ webrtc_dev_ver }}"
+webrtc_dev_skip_checkout: no

@@ -1,28 +1,27 @@
 ---
-- name: synchronize scripts
-  synchronize: >
-    src="{{ webrtc_build_src }}/scripts"
-    dest="{{ chromium_dev_root }}/webrtc/"
-    rsync_path="rsync"
-  tags: [webrtc-build]
 
-- name: copy makefile
-  copy: >
-    src="{{ webrtc_build_src }}/Makefile"
-    dest="{{ chromium_dev_root }}/webrtc/Makefile"
-    mode=0666
+- name: install fpm
+  gem: name=fpm state=latest user_install=no
+  become: yes
   tags: [webrtc-build]
 
 - name: install python dependencies
   pip: name={{ item }}
   with_items:
   - mako
+  become: yes
   tags: [webrtc-build]
-  sudo: yes
 
-- name: install ruby dependencies
-  gem: name=fpm state=present user_install=no
-  with_items:
-  - fpm
+- name: sync scripts to webrtc workspace
+  synchronize: >
+    src={{ role_path }}/../../../scripts
+    dest={{ webrtc_dev_root }}/webrtc/
   tags: [webrtc-build]
-  sudo: yes
+
+- name: set scripts owner
+  file: >
+    path={{ webrtc_dev_root }}/webrtc/scripts/
+    group={{ webrtc_dev_group }}
+    recurse=yes
+  become: yes
+  tags: [webrtc-build]
