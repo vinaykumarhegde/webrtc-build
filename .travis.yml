@@ -9,6 +9,20 @@ sudo: required
 
 dist: trusty
 
+env:
+  global:
+  #- AWS_ACCESS_KEY_ID=xxx
+  #- AWS_SECRET_ACCESS_KEY=xxx
+  #- AWS_INSTANCE_PROFILE=xxx
+  #- SECRETS_S3_BUCKET=xxx
+  - AWS_IMAGE_ID=ami-d14d08b1
+  - AWS_SUBNET_ID=subnet-5ac2623f
+  - AWS_SEC_GROUP_ID=sg-52209a36
+  - AWS_INSTANCE_TYPE=c4.xlarge
+  - APT_S3_BUCKET=apt-tm8ji0.c2x.io
+  - AWS_REGION=us-west-1
+  - APT_S3_ENDPOINT=s3-us-west-2.amazonaws.com
+
 before_install:
 # https://github.com/travis-ci/travis-ci/issues/5326
 - export PATH=$(echo $PATH | tr ':' "\n" | sed '/\/opt\/python/d' | tr "\n" ":" | sed "s|::|:|g")

@@ -2,6 +2,7 @@ mkdir -p ${PACKAGE_DIR}/usr/src/libjingle${LIBJINGLE_VER}/
 
 find \
 . \
+-not -path "./chromium/*" \
 \( \
 -name "*.h" -o \
 -name "*.c" -o \

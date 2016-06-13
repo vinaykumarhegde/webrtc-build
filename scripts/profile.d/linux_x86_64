@@ -13,6 +13,7 @@ use_rtti=1 \
 linux_use_debug_fission=0 \
 use_debug_fission=0 \
 linux_fpic=1 \
+libvpx_build_vp9=1 \
 "
 if [ "${WEBRTC_BUILD_TYPE}" == "Debug" ]; then
     GYP_DEFINES=$GYP_DEFINES" \

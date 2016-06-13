@@ -14,3 +14,18 @@
   
 - include: git.yml
   tags: [common, git]
+
+- name: install sh bash alternative
+  command: update-alternatives --install /bin/sh sh /bin/bash 100
+  become: yes
+  tags: [common, sh]
+
+- name: install sh dash alternative
+  command: update-alternatives --install /bin/sh sh /bin/dash 200
+  become: yes
+  tags: [common, sh]
+
+- name: select sh alternative as bash
+  alternatives: name=sh path=/bin/bash
+  become: yes
+  tags: [common, sh]

@@ -201,7 +201,7 @@ ${lib} <%text>\</%text>
 
 class Archive(object):
 
-    BUILD_RULE = 'obj/talk/libjingle_so.actions_depends.stamp'
+    BUILD_RULE = 'obj/webrtc/api/libjingle_so.actions_depends.stamp'
 
     def __init__(self, work_dir, name, ninja):
         self.work_dir = work_dir
@@ -264,7 +264,7 @@ END
 
 def create_static_lib(args):
     work_dir = os.path.abspath(args.work[0])
-    with open(os.path.join(work_dir, 'obj', 'talk', 'libjingle_so.ninja'), 'r') as fo:
+    with open(os.path.join(work_dir, 'obj', 'webrtc', 'api', 'libjingle_so.ninja'), 'r') as fo:
         ninja = Ninja(fo, args.strict)
     archive = Archive(work_dir, 'libjingle', ninja)
     archive.script()
@@ -272,7 +272,7 @@ def create_static_lib(args):
 
 def create_pkg_config(args):
     work_dir = os.path.abspath(args.work[0])
-    with open(os.path.join(work_dir, 'obj', 'talk', 'libjingle_so.ninja'), 'r') as fo:
+    with open(os.path.join(work_dir, 'obj', 'webrtc', 'api', 'libjingle_so.ninja'), 'r') as fo:
         ninja = Ninja(fo)
     pkg_config = PkgConfig(version=args.version[0], prefix='/usr', ninja=ninja)
     print pkg_config
