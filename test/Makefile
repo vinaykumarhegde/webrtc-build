@@ -1,6 +1,6 @@
 CC=g++
 
-LIBJINGLE_VER?=a4ef2ce
+LIBJINGLE_VER?=555cfe9
 LIBJINGLE_CFLAGS=$(shell pkg-config --cflags-only-other libjingle${LIBJINGLE_VER})
 LIBJINGLE_INCLUDES=$(shell pkg-config --cflags-only-I libjingle${LIBJINGLE_VER})
 LIBJINGLE_LDFLAGS=

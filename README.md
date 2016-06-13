@@ -5,7 +5,7 @@ Automation for:
 - building
 - packaging
 
-[Google's implementation](https://code.google.com/p/webrtc/) of WebRTC.
+[Google's implementation](https://code.google.com/p/webrtc/) of WebRTC for Linux.
 
 ## references  
 
@@ -20,7 +20,8 @@ If you just want packages add this apt repo:
 
 ```bash
 $ curl "http://apt-tm8ji0.c2x.io/1D33909E.asc" | sudo apt-key add -
-$ sudo sh -c 'echo "deb http://apt-tm8ji0.c2x.io/ trusty unstable" > /etc/apt/sources.list.d/tmp.apt_tm8ji0_c2x_io.list'
+$ sudo sh -c 'echo "deb http://apt-tm8ji0.c2x.io/ trusty unstable" > /etc/apt/sources.list.d/apt_tm8ji0_c2x_io.list'
+$ sudo apt-get update
 ```
 
 and install them:
@@ -29,17 +30,19 @@ and install them:
 $ sudo apt-get install libjinglea4ef2ce libjinglea4ef2ce-dev libjinglea4ef2ce-dbg libjinglea4ef2ce-src
 ```
 
-then maybe [test them](##test). If you want to build a particular *version*:
+then maybe [test them](#test).
+
+If you want to build a particular *version*:
 
 * get commit hash from the [webrtc project](https://chromium.googlesource.com/external/webrtc) (e.g. `a4ef2ce29de0c68b869f8d66276bc5acba54cc79`).
 * change `webrtc_dev_rev` in `provision/roles/webrtc_dev/defaults/main.yml`
   to that commit hash (e.g. `a4ef2ce29de0c68b869f8d66276bc5acba54cc79`)
-* make sure [it still builds](##build)!
+* make sure [it still builds](#build)!
 
-if so tag it w/ the short commit hash:
+if so tag it w/ the short commit hash (e.g. `a4ef2ce`):
 
 ```bash
-~/code/webrtc-build$ git commit -am a4ef2ce"
+~/code/webrtc-build$ git commit -am a4ef2ce
 ~/code/webrtc-build$ git tag -a a4ef2ce -m a4ef2ce"
 ~/code/webrtc-build$ git push --tags
 ```
@@ -59,8 +62,8 @@ $ sudo apt-get install ansible
 and optionally:
 
 * [Vagrant/Virtualbox](https://www.vagrantup.com/docs/getting-started/) if you
-plan on [building things locally](###local).
-* [aws-cli](https://aws.amazon.com/cli/) if you plan on [building things in aws](###remote).
+plan on [building things locally](#local).
+* [aws-cli](https://aws.amazon.com/cli/) if you plan on [building things in aws](#remote).
 
 ## build
 
@@ -75,8 +78,8 @@ and then choose one of ...
 
 ### local
 
-Only do this if you have a very fast internet connection. Provision a workspace
-in a local VM using `vagrant`:
+Only do this if you have a **very fast** internet connection. Provision a
+workspace in a local VM using `vagrant`:
 
 ```bash
 ~/code/webrtc-build$ vagrant up
@@ -185,9 +188,9 @@ package:
 ~/code/webrtc-build$ ssh ubuntu@54.153.86.252
 ubuntu@ip-172-31-27-38:~/$ cd /opt/webrtc
 ubuntu@ip-172-31-27-38:/opt/webrtc$ cd /opt/webrtc
-ubuntu@ip-172-31-27-38:/opt/webrtc$ WEBRTC_PROFILE=linux_x86_64 WEBRTC_BUILD_TYPE=Debug; ./scripts/build
+ubuntu@ip-172-31-27-38:/opt/webrtc$ WEBRTC_PROFILE=linux_x86_64 WEBRTC_BUILD_TYPE=Debug ./scripts/build
 ...
-ubuntu@ip-172-31-27-38:/opt/webrtc$ ./scripts/package
+ubuntu@ip-172-31-27-38:/opt/webrtc$ WEBRTC_PROFILE=linux_x86_64 WEBRTC_BUILD_TYPE=Debug ./scripts/package bin dev dbg src
 ...
 ```
 
@@ -242,4 +245,3 @@ Breakpoint 1, webrtc::CreatePeerConnectionFactory (worker_thread=0x130d010, sign
 80                                                             default_adm,
 81                                                             encoder_factory,
 ```
-

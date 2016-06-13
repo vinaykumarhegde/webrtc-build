@@ -11,11 +11,20 @@
   when: not webrtc_dev_skip_checkout
   tags: [webrtc-dev, webrtc-dev-patch]
 
-- name: install arm sysroot
-  shell: "PATH={{ chromium_dev_root }}/depot_tools/:${PATH}; source /etc/profile && src/chromium/src/chrome/installer/linux/sysroot_scripts/install-debian.wheezy.sysroot.py --arch=arm"
+- name: build arm sysroot
+  shell: "PATH={{ chromium_dev_root }}/depot_tools/:${PATH} source /etc/profile && ./src/chromium/src/build/linux/sysroot_scripts/{{ webrtc_dev_sysroot }} BuildSysrootARM"
   args:
     chdir: "{{ webrtc_dev_root }}/webrtc"
     executable: /bin/bash
-    creates: "{{ webrtc_dev_root }}/webrtc/src/chromium/src/chrome/installer/linux/debian_wheezy_arm-sysroot"
-  when: not webrtc_dev_skip_checkout
+  register: build_arm_sysroot
+  failed_when: build_arm_sysroot.rc not in (0, 1)
+  tags: [webrtc-dev, webrtc-dev-sysroot]
+
+- name: install arm sysroot
+  shell: "PATH={{ chromium_dev_root }}/depot_tools/:${PATH} source /etc/profile && ./src/chromium/src/build/linux/sysroot_scripts/install-sysroot.py --arch arm"
+  args:
+    chdir: "{{ webrtc_dev_root }}/webrtc"
+    executable: /bin/bash
+  register: install_arm_sysroot
+  changed_when: "'already up-to-date' not in install_arm_sysroot.stdout"
   tags: [webrtc-dev, webrtc-dev-sysroot]

@@ -11,7 +11,7 @@ SCRIPT_DIR=$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)  # http://stackoverfl
 BUILD_PATH=${BUILD_DIR:-"/opt/webrtc"}
 WEBRTC_PROFILE=${WEBRTC_PROFILE:-"linux_x86_64"}
 WEBRTC_BUILD_TYPE=${WEBRTC_PROFILE:-"Debug"}
-LIBJINGLE_VER=${LIBJINGLE_VER:-"a4ef2ce"}
+LIBJINGLE_VER=${LIBJINGLE_VER:-"555cfe9"}
 LIBJINGLE_TAG=${LIBJINGLE_VER:-""}
 
 # commands
